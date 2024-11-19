@@ -1,0 +1,23 @@
+.container {
+  width: 300px;
+  margin: auto;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+}
+
+input, select, button {
+  margin-bottom: 10px;
+  padding: 8px;
+  font-size: 16px;
+}
+
+span {
+  color: red;
+  font-size: 12px;
+}
