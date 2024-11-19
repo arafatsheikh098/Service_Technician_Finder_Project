@@ -9,15 +9,16 @@ const Dashboard = () => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      axios.get('http://localhost:8000/dashboard', {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      .then(response => {
-        setMessage(response.data.message);
-      })
-      .catch(error => {
-        setMessage('Access denied. Please log in.');
-      });
+      axios
+        .get('http://localhost:8000/dashboard', {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((response) => {
+          setMessage(response.data.message);
+        })
+        .catch(() => {
+          setMessage('Access denied. Please log in.');
+        });
     } else {
       setMessage('Access denied. Please log in.');
     }
@@ -27,17 +28,20 @@ const Dashboard = () => {
   const handleDeleteAccount = () => {
     const token = localStorage.getItem('token');
     if (token) {
-      axios.delete('http://localhost:8000/delete-account', {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      .then(response => {
-        setMessage('Account deleted successfully.');
-        localStorage.removeItem('token'); // Remove token on successful deletion
-        navigate('/signup'); // Redirect to signup page
-      })
-      .catch(error => {
-        setMessage('Error deleting account.');
-      });
+      axios
+        .delete('http://localhost:8000/delete-account', {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then(() => {
+          setMessage('Account deleted successfully. Redirecting to signup...');
+          localStorage.removeItem('token'); // Remove token on successful deletion
+          setTimeout(() => {
+            navigate('/signup'); // Redirect to signup page after 5 seconds
+          }, 5000);
+        })
+        .catch(() => {
+          setMessage('Error deleting account.');
+        });
     }
   };
 
