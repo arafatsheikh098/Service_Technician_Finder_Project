@@ -96,79 +96,33 @@ const authenticateJWT = (req, res, next) => {
   });
 };
 
-// Password Reset Code
-app.post('/send-reset-code', async (req, res) => {
-  const { email } = req.body;
+app.post('/reset-password', (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ success: false, message: 'Email and password are required.' });
+  }
 
   const query = 'SELECT * FROM User WHERE email = ?';
-  db.query(query, [email], async (err, results) => {
-    if (err || results.length === 0) {
-      return res.status(400).send('User not found.');
+  db.query(query, [email], (err, results) => {
+    if (err) {
+      return res.status(500).json({ success: false, message: 'Database query error.' });
     }
-
-    const code = crypto.randomBytes(3).toString('hex'); // Generate a random code
-    const user = results[0];
-
-    // Save the reset code in the user record
-    const updateQuery = 'UPDATE User SET resetCode = ? WHERE email = ?';
-    db.query(updateQuery, [code, email], (err, result) => {
-      if (err) return res.status(500).send('Error saving reset code.');
-
-      // Send code via email
-      const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-          user: 'your-email@gmail.com', // Replace with your email
-          pass: 'your-email-password', // Replace with your email password
-        },
-      });
-
-      transporter.sendMail({
-        from: 'your-email@gmail.com',
-        to: email,
-        subject: 'Password Reset Code',
-        text: `Your password reset code is: ${code}`,
-      });
-
-      res.send({ success: true, message: 'Reset code sent to email' });
-    });
-  });
-});
-
-// Verify Reset Code
-app.post('/verify-reset-code', (req, res) => {
-  const { email, code } = req.body;
-
-  const query = 'SELECT * FROM User WHERE email = ? AND resetCode = ?';
-  db.query(query, [email, code], (err, results) => {
-    if (err || results.length === 0) {
-      return res.status(400).send('Invalid code or email.');
-    }
-
-    res.send({ success: true });
-  });
-});
-
-// Reset Password
-app.post('/reset-password', (req, res) => {
-  const { email, code, password } = req.body;
-
-  const query = 'SELECT * FROM User WHERE email = ? AND resetCode = ?';
-  db.query(query, [email, code], (err, results) => {
-    if (err || results.length === 0) {
-      return res.status(400).send('Invalid code or email.');
+    if (results.length === 0) {
+      return res.status(404).json({ success: false, message: 'This email is not registered yet.' });
     }
 
     const hashedPassword = bcrypt.hashSync(password, 10);
-    const updateQuery = 'UPDATE User SET password = ?, resetCode = NULL WHERE email = ?';
+    const updateQuery = 'UPDATE User SET password = ? WHERE email = ?';
     db.query(updateQuery, [hashedPassword, email], (err) => {
       if (err) {
-        return res.status(500).send('Error resetting password.');
+        return res.status(500).json({ success: false, message: 'Error updating password.' });
       }
-      res.send({ success: true, message: 'Password has been reset successfully' });
+      res.json({ success: true, message: 'Password has been reset successfully.' });
     });
   });
 });
+
 app.delete('/delete-account', authenticateJWT, (req, res) => {
   const userId = req.user.user_id; // Assuming the token contains the user_id
   const query = 'DELETE FROM User WHERE user_id = ?';
