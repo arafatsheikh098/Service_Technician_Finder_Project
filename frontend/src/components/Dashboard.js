@@ -3,6 +3,14 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import './Dashboard.css'; // Import the CSS file
 
+const getCurrentDate = () => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 const Dashboard = () => {
   const [message, setMessage] = useState('');
   const [cities, setCities] = useState([]);
@@ -10,94 +18,153 @@ const Dashboard = () => {
   const [selectedCity, setSelectedCity] = useState('');
   const [selectedArea, setSelectedArea] = useState('');
   const [technicians, setTechnicians] = useState([]);
+  const [bookings, setBookings] = useState([]);
+  const [selectedTechnician, setSelectedTechnician] = useState('');
+  const [technicianDetails, setTechnicianDetails] = useState({
+    experience_years: 0,
+    rating: 0,
+    reviews_count: 0,
+    booking_count: 0,
+  });
+  const [bookingDate, setBookingDate] = useState(getCurrentDate());
+  const [status, setStatus] = useState('Pending');
+  const [rating, setRating] = useState('');
+  const [review, setReview] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [customerDetails, setCustomerDetails] = useState({
+    user_name: '',
+    phone_number: '',
+    email: '',
+  });
+  const [isUpdatingInfo, setIsUpdatingInfo] = useState(false);
+  const [isCustomerDetailsVisible, setIsCustomerDetailsVisible] = useState(false); // New state for toggling
   const navigate = useNavigate();
 
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      // Fetch dashboard message
       axios
         .get('http://localhost:8000/dashboard', {
           headers: { Authorization: `Bearer ${token}` },
         })
-        .then((response) => {
-          setMessage(response.data.message);
-        })
-        .catch(() => {
-          setMessage('Access denied. Please log in.');
-        });
-
-      // Fetch cities
-      axios
-        .get('http://localhost:8000/api/cities')
-        .then((response) => {
-          setCities(response.data);
-        })
-        .catch((error) => console.error('Error fetching cities:', error));
-    } else {
-      setMessage('Access denied. Please log in.');
-    }
-  }, []);
-
-  // Fetch areas when a city is selected
-  const handleCityChange = (e) => {
-    const cityId = e.target.value;
-    setSelectedCity(cityId);
-    axios
-      .get(`http://localhost:8000/api/areas/${cityId}`)
-      .then((response) => {
-        setAreas(response.data);
-        setSelectedArea(''); // Reset area dropdown
-      })
-      .catch((error) => console.error('Error fetching areas:', error));
-  };
-
-  // Fetch technicians for the selected area
-  const fetchTechnicians = (zipcode) => {
-    axios
-      .get(`http://localhost:8000/api/technicians/${zipcode}`)
-      .then((response) => {
-        if (response.data.success) {
-          setTechnicians(response.data.technicians);
-        }
-      })
-      .catch((error) => console.error('Error fetching technicians:', error));
-  };
-
-  // Handle search button click
-  const handleSearch = () => {
-    if (selectedCity && selectedArea) {
-      fetchTechnicians(selectedArea);
-    } else {
-      alert('Please select both city and area to search.');
-    }
-  };
-
-  // Handle booking a technician
-  const handleBook = (technician_id) => {
-    const token = localStorage.getItem('token');
-
-    if (token) {
-      const bookingData = {
-        technician_id,
-        booking_date: new Date().toISOString().split('T')[0], // Current date
-        status: 'Pending', // Default status
-      };
+        .then((response) => setMessage(response.data.message))
+        .catch(() => setMessage('Access denied. Please log in.'));
 
       axios
-        .post('http://localhost:8000/api/bookings', bookingData, {
+        .get('http://localhost:8000/api/customer-details', {
           headers: { Authorization: `Bearer ${token}` },
         })
-        .then(() => {
-          alert('Booking created successfully!');
+        .then((response) => setCustomerDetails(response.data))
+        .catch((error) => console.error('Error fetching customer details:', error));
+
+      axios
+        .get('http://localhost:8000/api/cities')
+        .then((response) => setCities(response.data))
+        .catch((error) => console.error('Error fetching cities:', error));
+
+      axios
+        .get('http://localhost:8000/api/bookings', {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((response) => setBookings(response.data))
+        .catch((error) => console.error('Error fetching bookings:', error));
+    } else {
+      navigate('/login');
+    }
+  }, [navigate]);
+
+  useEffect(() => {
+    if (selectedCity) {
+      axios
+        .get(`http://localhost:8000/api/areas/${selectedCity}`)
+        .then((response) => setAreas(response.data))
+        .catch((error) => console.error('Error fetching areas:', error));
+    }
+  }, [selectedCity]);
+
+  useEffect(() => {
+    if (selectedArea) {
+      axios
+        .get(`http://localhost:8000/api/technicians/${selectedArea}`)
+        .then((response) => setTechnicians(response.data.technicians))
+        .catch((error) => console.error('Error fetching technicians:', error));
+    }
+  }, [selectedArea]);
+
+  const handleTechnicianChange = (e) => {
+    const technicianId = e.target.value;
+    setSelectedTechnician(technicianId);
+    // Check if technicianId is selected and fetch technician details
+    if (technicianId) {
+      axios
+        .get(`http://localhost:8000/api/technician-details/${technicianId}`)
+        .then((response) => {
+          // Update the technician details with the response
+          setTechnicianDetails(response.data);
         })
         .catch((error) => {
-          console.error('Error creating booking:', error.response?.data?.message || error.message);
-          alert('Failed to create booking. Please try again.');
+          console.error('Error fetching technician details:', error);
+          setTechnicianDetails({
+            experience_years: 0,
+            rating: 0,
+            reviews_count: 0,
+            booking_count: 0,
+          });
+        });
+    }
+  };
+  
+
+  const handleBookingSubmit = (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem('token');
+    if (selectedTechnician && bookingDate) {
+      axios
+        .post(
+          'http://localhost:8000/api/bookings',
+          { technician_id: selectedTechnician, booking_date: bookingDate, status },
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
+        .then((response) => setBookings([...bookings, response.data]))
+        .catch((error) => {
+          setErrorMessage('Error creating booking. Please try again.');
+          console.error(error);
         });
     } else {
-      alert('You must be logged in to book a technician.');
+      setErrorMessage('Please select a technician and a date.');
     }
+  };
+
+  const handleReviewSubmit = (booking_id) => {
+    const token = localStorage.getItem('token');
+    if (rating && review) {
+      axios
+        .put(
+          `http://localhost:8000/api/bookings/${booking_id}`,
+          { status: 'Completed', rating, review },
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
+        .then(() => {
+          setBookings(
+            bookings.map((booking) =>
+              booking.booking_id === booking_id
+                ? { ...booking, status: 'Completed', rating, review }
+                : booking
+            )
+          );
+        })
+        .catch((error) => {
+          setErrorMessage('Error updating booking. Please try again.');
+          console.error(error);
+        });
+    } else {
+      setErrorMessage('Please provide a rating and review.');
+    }
+  };
+// log out
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    navigate('/login');
   };
 
   // Delete account function
@@ -121,82 +188,117 @@ const Dashboard = () => {
     }
   };
 
-  // Logout function
-  const handleLogout = () => {
-    localStorage.removeItem('token'); // Remove token
-    navigate('/login'); // Redirect to login page
+  const handleCustomerUpdate = (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem('token');
+    axios
+      .put('http://localhost:8000/api/customer-details', customerDetails, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then(() => {
+        setMessage('Customer details updated successfully!');
+        setErrorMessage('');
+        setIsUpdatingInfo(false);
+      })
+      .catch((error) => {
+        setErrorMessage('Error updating details. Please try again.');
+        console.error(error);
+      });
+  };
+
+  const toggleCustomerDetails = () => {
+    setIsCustomerDetailsVisible(!isCustomerDetailsVisible); // Toggle visibility
   };
 
   return (
-    <div className="dashboard-container">
-      {/* Top Left - Customer Dashboard and Welcome Message */}
-      <div className="top-left">
-        <h1>Customer Dashboard</h1>
-        <p>{message}</p>
-      </div>
+    <div className="dashboard">
+      <h1>Customer Dashboard</h1>
+      <p>{message}</p>
 
-      {/* Top Right - Delete and Logout Buttons */}
-      <div className="top-right">
+      <div className="actions">
         <button onClick={handleDeleteAccount}>Delete Account</button>
         <button onClick={handleLogout}>Logout</button>
+        <button onClick={() => navigate('/update-profile')}>
+          Update Your Information
+        </button>
       </div>
 
-      {/* Main Content */}
-      <div className="main-content">
-        {/* Search Section */}
-        <div className="search-section">
-          <h3>Find a Technician</h3>
-          <div className="form-group">
-            <label>City:</label>
-            <select value={selectedCity} onChange={handleCityChange}>
-              <option value="">Select City</option>
-              {cities.map((city) => (
-                <option key={city.city_id} value={city.city_id}>
-                  {city.city_name}
-                </option>
-              ))}
-            </select>
-          </div>
+      {/* Toggle Button for Customer Details */}
+      <div className="show-details-button">
+    <button onClick={toggleCustomerDetails}>
+      {isCustomerDetailsVisible ? 'Hide' : 'Show'} Your Details
+    </button>
+  </div>
 
-          <div className="form-group">
-            <label>Area:</label>
-            <select
-              value={selectedArea}
-              onChange={(e) => setSelectedArea(e.target.value)}
-              disabled={!selectedCity}
-            >
-              <option value="">Select Area</option>
-              {areas.map((area) => (
-                <option key={area.zipcode} value={area.zipcode}>
-                  {area.area}
-                </option>
-              ))}
-            </select>
-          </div>
+  {/* Conditionally Render Customer Details */}
+  {isCustomerDetailsVisible && (
+    <div className="customer-details">
+      <h2>Your Details</h2>
+      <p><strong>Name:</strong> {customerDetails.user_name}</p>
+      <p><strong>Phone Number:</strong> {customerDetails.phone_number}</p>
+      <p><strong>Email:</strong> {customerDetails.email}</p>
+    </div>
+  )}
 
-          <button onClick={handleSearch}>Search</button>
+      <h2>Find and Book a Technician</h2>
+      <form onSubmit={handleBookingSubmit}>
+        <select value={selectedCity} onChange={(e) => setSelectedCity(e.target.value)}>
+          <option value="">Select City</option>
+          {cities.map((city) => (
+            <option key={city.city_id} value={city.city_id}>
+              {city.city_name}
+            </option>
+          ))}
+        </select>
+
+        <select value={selectedArea} onChange={(e) => setSelectedArea(e.target.value)}>
+          <option value="">Select Area</option>
+          {areas.map((area) => (
+            <option key={area.zipcode} value={area.zipcode}>
+              {area.area}
+            </option>
+          ))}
+        </select>
+
+        <select value={selectedTechnician} onChange={handleTechnicianChange}>
+          <option value="">Select Technician</option>
+          {technicians.map((technician) => (
+            <option key={technician.user_id} value={technician.user_id}>
+              {technician.user_name}- {technician.services}
+            </option>
+          ))}
+        </select>
+
+        <div>
+          <h4>Technician Details</h4>
+          <p><strong>Experience:</strong> {technicianDetails.experience_years} years</p>
+          <p><strong>Rating:</strong> {technicianDetails.rating}</p>
+          <p><strong>Reviews Count:</strong> {technicianDetails.reviews_count}</p>
+          <p><strong>Bookings:</strong> {technicianDetails.booking_count}</p>
         </div>
 
-        {/* Technicians List */}
-        {technicians.length > 0 && (
-          <div className="technicians-list">
-            <h2>Technicians</h2>
-            <ul>
-              {technicians.map((tech) => (
-                <li key={tech.user_id}>
-                  <strong>{tech.user_name}</strong> - {tech.experienced_year} years experience
-                  <br />
-                  Services: {tech.services || 'No services available'}
-                  <br />
-                  Phone: {tech.phone_number}
-                  <br />
-                  <button onClick={() => handleBook(tech.user_id)}>Book</button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
+        <input
+          type="date"
+          value={bookingDate}
+          onChange={(e) => setBookingDate(e.target.value)}
+        />
+        <button type="submit">Book Technician</button>
+      </form>
+
+      {/* Booking List */}
+      <h3>Your Bookings</h3>
+      <ul>
+        {bookings.map((booking) => (
+          <li key={booking.booking_id}>
+            {booking.technician_name} - {booking.booking_date} - {booking.status}
+            {booking.status === 'Pending' && (
+              <button onClick={() => handleReviewSubmit(booking.booking_id)}>
+                Provide Review
+              </button>
+            )}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 };

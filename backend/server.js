@@ -74,7 +74,33 @@ const authenticateJWT = (req, res, next) => {
     next();
   });
 };
+// Reset Password
+app.post('/reset-password', (req, res) => {
+  const { email, password } = req.body;
 
+  if (!email || !password) {
+    return res.status(400).json({ success: false, message: 'Email and password are required.' });
+  }
+
+  const query = 'SELECT * FROM User WHERE email = ?';
+  db.query(query, [email], (err, results) => {
+    if (err) {
+      return res.status(500).json({ success: false, message: 'Database query error.' });
+    }
+    if (results.length === 0) {
+      return res.status(404).json({ success: false, message: 'This email is not registered yet.' });
+    }
+
+    const hashedPassword = bcrypt.hashSync(password, 10);
+    const updateQuery = 'UPDATE User SET password = ? WHERE email = ?';
+    db.query(updateQuery, [hashedPassword, email], (err) => {
+      if (err) {
+        return res.status(500).json({ success: false, message: 'Error updating password.' });
+      }
+      res.json({ success: true, message: 'Password has been reset successfully.' });
+    });
+  });
+});
 // Dashboard Endpoint
 app.get('/dashboard', authenticateJWT, (req, res) => {
   res.json({ success: true, message: `Welcome to the dashboard, user ${req.user.user_id}` });
@@ -104,6 +130,7 @@ app.get('/api/areas/:city_id', (req, res) => {
     res.json(results);
   });
 });
+
 // Get Technicians by Area (Zipcode)
 app.get('/api/technicians/:zipcode', (req, res) => {
   const { zipcode } = req.params;
@@ -114,7 +141,8 @@ app.get('/api/technicians/:zipcode', (req, res) => {
       User.user_name,
       Technician.experienced_year,
       Location.area,
-      GROUP_CONCAT(Service.service_name) AS services
+      GROUP_CONCAT(Service.service_name) AS services,
+      User.phone_number
     FROM Technician
     JOIN User ON Technician.user_id = User.user_id
     JOIN Location ON Technician.zipcode = Location.zipcode
@@ -132,7 +160,157 @@ app.get('/api/technicians/:zipcode', (req, res) => {
   });
 });
 
+app.put('/api/update-profile', authenticateJWT, (req, res) => {
+  const { user_name, email, phone_number } = req.body;
 
-// Server setup
-const PORT = process.env.PORT || 8000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  // Validate request body
+  if (!user_name || !email || !phone_number) {
+    return res.status(400).json({ success: false, message: 'All fields are required.' });
+  }
+
+  // Check if email already exists for another user (excluding the current user)
+  const checkEmailQuery = 'SELECT * FROM User WHERE LOWER(email) = LOWER(?) AND user_id != ?';
+  db.query(checkEmailQuery, [email, req.user.user_id], (err, results) => {
+    if (err) {
+      console.error('Error checking email:', err);  // Log the error
+      return res.status(500).json({ success: false, message: 'Database error.' });
+    }
+
+    // If email already exists for another user
+    if (results.length > 0) {
+      return res.status(400).json({ success: false, message: 'Email already in use.' });
+    }
+
+    // Proceed with the profile update
+    const query = `
+      UPDATE User
+      SET user_name = ?, email = ?, phone_number = ?
+      WHERE user_id = ?
+    `;
+    db.query(query, [user_name, email, phone_number, req.user.user_id], (err, result) => {
+      if (err) {
+        console.error('Error updating profile:', err);  // Log the error
+        return res.status(500).json({ success: false, message: 'Error updating profile.' });
+      }
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ success: false, message: 'User not found.' });
+      }
+
+      res.json({ success: true, message: 'Profile updated successfully!' });
+    });
+  });
+});
+app.get('/api/technician-details/:technician_id', (req, res) => {
+  const technicianId = req.params.technician_id;
+
+  const query = `
+    SELECT 
+      Technician.experienced_year, 
+      AVG(Booking.rating) AS rating, 
+      COUNT(Booking.booking_id) AS booking_count, 
+      COUNT(DISTINCT Booking.booking_id) AS reviews_count
+    FROM Technician
+    LEFT JOIN Booking ON Technician.user_id = Booking.technician_id
+    WHERE Technician.user_id = ?
+    GROUP BY Technician.user_id
+  `;
+
+  db.query(query, [technicianId], (err, results) => {
+    if (err) return res.status(500).json({ success: false, message: 'Error fetching technician details.' });
+
+    if (results.length === 0) {
+      return res.status(404).json({ success: false, message: 'Technician not found.' });
+    }
+
+    const technicianDetails = results[0];
+    res.json({
+      success: true,
+      technicianDetails,
+    });
+  });
+});
+
+
+// Create Booking (Customer books a Technician)
+app.post('/api/bookings', authenticateJWT, (req, res) => {
+  const { technician_id, booking_date, status } = req.body;
+  const customer_id = req.user.user_id;
+
+  const query = 'INSERT INTO Booking (customer_id, technician_id, booking_date, status) VALUES (?, ?, ?, ?)';
+  db.query(query, [customer_id, technician_id, booking_date, status], (err, results) => {
+    if (err) return res.status(500).json({ success: false, message: 'Error creating booking.' });
+    res.json({ success: true, message: 'Booking created successfully!', booking_id: results.insertId });  
+  });
+});
+
+// Update Booking Status to Completed and Add Rating/Review
+app.put('/api/bookings/:booking_id', authenticateJWT, (req, res) => {
+  const { booking_id } = req.params;
+  const { status, rating, review } = req.body;
+
+  if (status === 'Completed' && (rating === undefined || review === undefined)) {
+    return res.status(400).json({ success: false, message: 'Rating and review are required when completing the booking.' });
+  }
+
+  const query = `
+    UPDATE Booking
+    SET status = ?, rating = ?, review = ?
+    WHERE booking_id = ? AND customer_id = ?
+  `;
+
+  db.query(query, [status, rating, review, booking_id, req.user.user_id], (err) => {
+    if (err) return res.status(500).json({ success: false, message: 'Error updating booking.' });
+    res.json({ success: true, message: 'Booking status updated successfully!' });
+  });
+});
+
+// Get Customer Details
+app.get('/api/customer-details', authenticateJWT, (req, res) => {
+  const userId = req.user.user_id;
+
+  const query = `
+    SELECT user_name, phone_number, email
+    FROM User
+    WHERE user_id = ?
+  `;
+  
+  db.query(query, [userId], (err, results) => {
+    if (err) return res.status(500).json({ success: false, message: 'Error fetching customer details.' });
+    if (results.length === 0) {
+      return res.status(404).json({ success: false, message: 'Customer not found.' });
+    }
+    res.json(results[0]);  // Send back the customer details
+  });
+});
+
+// Get Bookings for the Logged-in User
+app.get('/api/bookings', authenticateJWT, (req, res) => {
+  const userId = req.user.user_id;
+
+  const query = `
+    SELECT 
+      Booking.booking_id,
+      Booking.booking_date,
+      Technician.user_name AS technician_name,
+      Booking.status,
+      Booking.rating,
+      Booking.review
+    FROM Booking
+    JOIN Technician ON Booking.technician_id = Technician.user_id
+    WHERE Booking.customer_id = ?
+    ORDER BY Booking.booking_date DESC
+  `;
+
+  db.query(query, [userId], (err, results) => {
+    if (err) return res.status(500).json({ success: false, message: 'Error fetching bookings.' });
+    res.json(results);  // Send back the list of bookings for the user
+  });
+});
+
+
+// Start Server
+const port = 8000;
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
+});
