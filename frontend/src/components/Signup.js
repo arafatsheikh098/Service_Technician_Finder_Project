@@ -120,7 +120,7 @@ const SignUp = () => {
           onBlur={blurHandler}
         >
           <option value="customer">Customer</option>
-          <option value="technician">Technician</option>
+          {/* <option value="technician">Technician</option> */}
         </select>
         {touched.role && errors.role && (
           <span className={styles.error}>{errors.role}</span>

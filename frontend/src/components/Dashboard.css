@@ -1,0 +1,86 @@
+/* Dashboard.css */
+
+/* Container for the whole page */
+.dashboard-container {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    padding: 20px;
+    height: 100vh;
+  }
+  
+  /* Top Left Section */
+  .top-left {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    text-align: left;
+  }
+  
+  /* Top Right Section (for Delete and Logout buttons) */
+  .top-right {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;  /* Use flexbox to align buttons horizontally */
+    gap: 10px;  /* Space between the buttons */
+    align-items: center;  /* Vertically center the buttons */
+    white-space: nowrap;
+  }
+  
+  /* Main content centered */
+  .main-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;  /* Makes it take the remaining space */
+  }
+  
+  /* Search Section */
+  .search-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .form-group {
+    margin-bottom: 15px;
+  }
+  
+  select {
+    padding: 8px;
+    width: 200px;
+    margin-top: 5px;
+  }
+  
+  button {
+    padding: 10px 20px;
+    margin-top: 15px;
+    cursor: pointer;
+  }
+  
+  /* Technicians List */
+  .technicians-list ul {
+    list-style-type: none;
+    padding: 0;
+    text-align: left;
+    margin-top: 20px;
+  }
+  
+  .technicians-list li {
+    margin-bottom: 10px;
+  }
+  
+  /* Account Management Buttons */
+  .top-right button {
+    padding: 10px 20px;
+    cursor: pointer;
+    margin-left: 10px;
+  }
+  
+  button {
+    margin-top: 20px;
+  }
+  

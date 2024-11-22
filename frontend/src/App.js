@@ -4,8 +4,8 @@ import Signup from './components/Signup';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import ForgotPassword from './components/ForgotPassword';        // Add ForgotPassword component
-import VerifyCode from './components/VerifyCode';                // Add VerifyCode component
-import ResetPassword from './components/ResetPassword';          // Add ResetPassword component
+//import VerifyCode from './components/VerifyCode';                // Add VerifyCode component
+//import ResetPassword from './components/ResetPassword';          // Add ResetPassword component
 
 function App() {
   return (
@@ -15,8 +15,8 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />  {/* Route for forgot password */}
-        <Route path="/verify-code" element={<VerifyCode />} />          {/* Route for verifying code */}
-        <Route path="/reset-password" element={<ResetPassword />} />    {/* Route for resetting password */}
+        {/* <Route path="/verify-code" element={<VerifyCode />} />          Route for verifying code */}
+        {/* <Route path="/reset-password" element={<ResetPassword />} />    Route for resetting password */}
       </Routes>
     </Router>
   );

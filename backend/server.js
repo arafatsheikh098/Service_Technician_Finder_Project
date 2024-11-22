@@ -4,14 +4,12 @@ const bodyParser = require('body-parser');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const mysql = require('mysql2');
-const nodemailer = require('nodemailer');
-const crypto = require('crypto');
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// Create a MySQL connection
+// MySQL connection
 const db = mysql.createConnection({
   host: 'localhost',
   user: 'root',
@@ -19,10 +17,10 @@ const db = mysql.createConnection({
   database: 'ServiceTechnicianFinder',
 });
 
-// JWT Secret Key (Use environment variables in production)
+// JWT Secret Key
 const SECRET_KEY = 'your_secret_key';
 
-// User Sign-Up route
+// User Signup
 app.post('/signup', (req, res) => {
   const { user_name, email, password, phone_number, role } = req.body;
 
@@ -31,27 +29,19 @@ app.post('/signup', (req, res) => {
   }
 
   bcrypt.hash(password, 10, (err, hashedPassword) => {
-    if (err) {
-      return res.status(500).json({ success: false, message: 'Error during password hashing.' });
-    }
+    if (err) return res.status(500).json({ success: false, message: 'Error hashing password.' });
 
     const query = 'INSERT INTO User (user_name, email, password, phone_number, role) VALUES (?, ?, ?, ?, ?)';
-    db.query(query, [user_name, email, hashedPassword, phone_number, role], (err, results) => {
-      if (err) {
-        return res.status(500).json({ success: false, message: 'Error during sign-up. Please try again.' });
-      }
+    db.query(query, [user_name, email, hashedPassword, phone_number, role], (err) => {
+      if (err) return res.status(500).json({ success: false, message: 'Error during sign-up.' });
       res.json({ success: true, message: 'User created successfully!' });
     });
   });
 });
 
-// User Log-In route
+// User Login
 app.post('/login', (req, res) => {
   const { email, password } = req.body;
-
-  if (!email || !password) {
-    return res.status(400).json({ success: false, message: 'Email and password are required' });
-  }
 
   const query = 'SELECT * FROM User WHERE email = ?';
   db.query(query, [email], (err, results) => {
@@ -64,91 +54,85 @@ app.post('/login', (req, res) => {
         return res.status(400).json({ success: false, message: 'Invalid email or password' });
       }
 
-      // Generate JWT token
       const token = jwt.sign({ user_id: results[0].user_id, role: results[0].role }, SECRET_KEY, {
         expiresIn: '1h',
       });
 
-      res.json({
-        success: true,
-        message: 'Login successful!',
-        token: token,
-      });
+      res.json({ success: true, message: 'Login successful!', token });
     });
   });
 });
 
-// Middleware to authenticate JWT
+// Middleware for authentication
 const authenticateJWT = (req, res, next) => {
-  const token = req.header('Authorization')?.split(' ')[1]; // Expect "Bearer <token>"
-
-  if (!token) {
-    return res.status(403).json({ success: false, message: 'Access denied. No token provided.' });
-  }
+  const token = req.header('Authorization')?.split(' ')[1];
+  if (!token) return res.status(403).json({ success: false, message: 'Access denied.' });
 
   jwt.verify(token, SECRET_KEY, (err, user) => {
-    if (err) {
-      return res.status(403).json({ success: false, message: 'Invalid token.' });
-    }
-
-    req.user = user; // Attach user info to request
+    if (err) return res.status(403).json({ success: false, message: 'Invalid token.' });
+    req.user = user;
     next();
   });
 };
 
-app.post('/reset-password', (req, res) => {
-  const { email, password } = req.body;
-
-  if (!email || !password) {
-    return res.status(400).json({ success: false, message: 'Email and password are required.' });
-  }
-
-  const query = 'SELECT * FROM User WHERE email = ?';
-  db.query(query, [email], (err, results) => {
-    if (err) {
-      return res.status(500).json({ success: false, message: 'Database query error.' });
-    }
-    if (results.length === 0) {
-      return res.status(404).json({ success: false, message: 'This email is not registered yet.' });
-    }
-
-    const hashedPassword = bcrypt.hashSync(password, 10);
-    const updateQuery = 'UPDATE User SET password = ? WHERE email = ?';
-    db.query(updateQuery, [hashedPassword, email], (err) => {
-      if (err) {
-        return res.status(500).json({ success: false, message: 'Error updating password.' });
-      }
-      res.json({ success: true, message: 'Password has been reset successfully.' });
-    });
-  });
+// Dashboard Endpoint
+app.get('/dashboard', authenticateJWT, (req, res) => {
+  res.json({ success: true, message: `Welcome to the dashboard, user ${req.user.user_id}` });
 });
 
+// Delete Account
 app.delete('/delete-account', authenticateJWT, (req, res) => {
-  const userId = req.user.user_id; // Assuming the token contains the user_id
-  const query = 'DELETE FROM User WHERE user_id = ?';
-  db.query(query, [userId], (err, result) => {
-    if (err) {
-      console.error('Error during account deletion:', err);
-      return res.status(500).json({ success: false, message: 'Failed to delete account.' });
-    }
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ success: false, message: 'User not found.' });
-    }
+  const userId = req.user.user_id;
+  db.query('DELETE FROM User WHERE user_id = ?', [userId], (err) => {
+    if (err) return res.status(500).json({ success: false, message: 'Error deleting account.' });
     res.json({ success: true, message: 'Account deleted successfully.' });
   });
 });
 
+// Get Cities
+app.get('/api/cities', (req, res) => {
+  db.query('SELECT city_id, city_name FROM City_location', (err, results) => {
+    if (err) return res.status(500).send('Error fetching cities.');
+    res.json(results);
+  });
+});
 
+// Get Areas by City
+app.get('/api/areas/:city_id', (req, res) => {
+  db.query('SELECT zipcode, area FROM Location WHERE city_id = ?', [req.params.city_id], (err, results) => {
+    if (err) return res.status(500).send('Error fetching areas.');
+    res.json(results);
+  });
+});
+// Get Technicians by Area (Zipcode)
+app.get('/api/technicians/:zipcode', (req, res) => {
+  const { zipcode } = req.params;
 
+  const query = `
+    SELECT 
+      Technician.user_id,
+      User.user_name,
+      Technician.experienced_year,
+      Location.area,
+      GROUP_CONCAT(Service.service_name) AS services
+    FROM Technician
+    JOIN User ON Technician.user_id = User.user_id
+    JOIN Location ON Technician.zipcode = Location.zipcode
+    LEFT JOIN Offers ON Technician.user_id = Offers.technician_id
+    LEFT JOIN Service ON Offers.service_id = Service.service_id
+    WHERE Technician.zipcode = ?
+    GROUP BY Technician.user_id
+  `;
 
-// Protected Route Example (Dashboard)
-app.get('/dashboard', authenticateJWT, (req, res) => {
-  res.json({ success: true, message: `Welcome to the dashboard, user ${req.user.user_id}` });
+  db.query(query, [zipcode], (err, results) => {
+    if (err) {
+      return res.status(500).json({ success: false, message: 'Error fetching technicians.', error: err });
+    }
+    res.json({ success: true, technicians: results });
+  });
 });
 
 
 // Server setup
 const PORT = process.env.PORT || 8000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
