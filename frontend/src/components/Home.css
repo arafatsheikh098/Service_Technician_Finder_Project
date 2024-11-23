@@ -1,0 +1,122 @@
+.home-container {
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+  
+  .navbar {
+    display: flex;
+    justify-content: space-between;
+    padding: 20px;
+    background-color: #333;
+    color: white;
+  }
+  
+  .navbar .logo {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 2rem
+  }
+  /* Increase font size for the logo text specifically */
+.navbar .logo span {
+    font-size: 2.5rem;  /* Adjust the size here */
+    font-weight: bold;  /* Optional for making it bolder */
+    color: white; /* Make sure the text is white */
+  }
+  .navbar .logo img {
+    width: 40px;
+    margin-right: 10px;
+  }
+  
+  .navbar .nav-links {
+    list-style: none;
+    display: flex;
+    gap: 20px;
+    align-items: center;
+  }
+  
+  .navbar .nav-links li {
+    cursor: pointer;
+  }
+  
+  .navbar .nav-links li:hover {
+    text-decoration: underline;
+  }
+  
+  .main-content {
+    text-align: center;
+    margin-top: 50px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .main-content h1 {
+    font-size: 2.5rem;
+    color: #333;
+  }
+  
+  .main-content p {
+    font-size: 1.2rem;
+    color: #666;
+    margin-top: 20px;
+  }
+  
+  .register-btn {
+    padding: 15px 30px;
+    font-size: 1.2rem;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 30px;
+    width: auto; /* Prevent it from stretching across the full page */
+    max-width: 300px; /* Optional: limit button width */
+  }
+  
+  .register-btn:hover {
+    background-color: #0056b3;
+  }
+  /* Services Section */
+.services-main {
+    text-align: center;
+    margin-top: 30px;
+  }
+  
+  .services-main h2 {
+    font-size: 2rem;
+    color: #333;
+  }
+  
+  .services-list {
+    list-style-type: none;
+    padding: 0;
+    margin-top: 30px;
+  }
+  
+  .services-list .service-item {
+    font-size: 1.8rem; /* Adjust the font size here */
+    padding: 15px 0;
+    border-bottom: 1px solid #ccc;
+  }
+  
+  .services-list .service-item span {
+    color: #4CAF50; /* Change text color here */
+    font-weight: bold;
+  }
+  
+  .services-list .service-item span:hover {
+    color: #45a049; /* Hover effect for color */
+  }
+  
+  .footer {
+    background-color: #333;
+    color: white;
+    text-align: center;
+    padding: 20px;
+    margin-top: auto;
+  }
+  
