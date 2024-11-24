@@ -36,8 +36,8 @@ const Dashboard = () => {
     phone_number: '',
     email: '',
   });
-  const [isUpdatingInfo, setIsUpdatingInfo] = useState(false);
-  const [isCustomerDetailsVisible, setIsCustomerDetailsVisible] = useState(false); // New state for toggling
+  const [isUpdatingInfo, setIsUpdatingInfo] = useState(false); // For toggling update form
+  const [isCustomerDetailsVisible, setIsCustomerDetailsVisible] = useState(false); // For toggling customer details visibility
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -94,12 +94,10 @@ const Dashboard = () => {
   const handleTechnicianChange = (e) => {
     const technicianId = e.target.value;
     setSelectedTechnician(technicianId);
-    // Check if technicianId is selected and fetch technician details
     if (technicianId) {
       axios
         .get(`http://localhost:8000/api/technician-details/${technicianId}`)
         .then((response) => {
-          // Update the technician details with the response
           setTechnicianDetails(response.data);
         })
         .catch((error) => {
@@ -113,7 +111,6 @@ const Dashboard = () => {
         });
     }
   };
-  
 
   const handleBookingSubmit = (e) => {
     e.preventDefault();
@@ -161,13 +158,12 @@ const Dashboard = () => {
       setErrorMessage('Please provide a rating and review.');
     }
   };
-// log out
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     navigate('/login');
   };
 
-  // Delete account function
   const handleDeleteAccount = () => {
     const token = localStorage.getItem('token');
     if (token) {
@@ -177,9 +173,9 @@ const Dashboard = () => {
         })
         .then(() => {
           setMessage('Account deleted successfully. Redirecting to signup...');
-          localStorage.removeItem('token'); // Remove token on successful deletion
+          localStorage.removeItem('token');
           setTimeout(() => {
-            navigate('/signup'); // Redirect to signup page
+            navigate('/signup');
           }, 5000);
         })
         .catch(() => {
@@ -199,6 +195,7 @@ const Dashboard = () => {
         setMessage('Customer details updated successfully!');
         setErrorMessage('');
         setIsUpdatingInfo(false);
+        
       })
       .catch((error) => {
         setErrorMessage('Error updating details. Please try again.');
@@ -225,20 +222,20 @@ const Dashboard = () => {
 
       {/* Toggle Button for Customer Details */}
       <div className="show-details-button">
-    <button onClick={toggleCustomerDetails}>
-      {isCustomerDetailsVisible ? 'Hide' : 'Show'} Your Details
-    </button>
-  </div>
+        <button onClick={toggleCustomerDetails}>
+          {isCustomerDetailsVisible ? 'Hide' : 'Show'} Your Details
+        </button>
+      </div>
 
-  {/* Conditionally Render Customer Details */}
-  {isCustomerDetailsVisible && (
-    <div className="customer-details">
-      <h2>Your Details</h2>
-      <p><strong>Name:</strong> {customerDetails.user_name}</p>
-      <p><strong>Phone Number:</strong> {customerDetails.phone_number}</p>
-      <p><strong>Email:</strong> {customerDetails.email}</p>
-    </div>
-  )}
+      {/* Conditionally Render Customer Details */}
+      {isCustomerDetailsVisible && (
+        <div className="customer-details">
+          <h2>Your Details</h2>
+          <p><strong>Name:</strong> {customerDetails.user_name}</p>
+          <p><strong>Phone Number:</strong> {customerDetails.phone_number}</p>
+          <p><strong>Email:</strong> {customerDetails.email}</p>
+        </div>
+      )}
 
       <h2>Find and Book a Technician</h2>
       <form onSubmit={handleBookingSubmit}>

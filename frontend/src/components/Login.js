@@ -24,11 +24,22 @@ const Login = () => {
     }
 
     try {
+      // Declare and assign response here
       const response = await axios.post('http://localhost:8000/login', { email, password });
 
       if (response.data.success) {
+        // Save token and role in localStorage
         localStorage.setItem('token', response.data.token);
-        navigate('/dashboard');
+        localStorage.setItem('role', response.data.role); // Store user role
+
+        // Redirect based on role
+        if (response.data.role === 'Customer') {
+          navigate('/dashboard');
+        } else if (response.data.role === 'Technician') {
+          navigate('/technician-dashboard');
+        } else {
+          setError('Invalid user role.');
+        }
       } else {
         setError(response.data.message || 'Login failed.');
       }
