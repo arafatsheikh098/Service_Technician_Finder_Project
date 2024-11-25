@@ -24,20 +24,37 @@ const SECRET_KEY = 'your_secret_key';
 app.post('/signup', (req, res) => {
   const { user_name, email, password, phone_number, role } = req.body;
 
+  // Validate input fields
   if (!user_name || !email || !password || !role) {
     return res.status(400).json({ success: false, message: 'All fields are required' });
   }
 
+  // Hash the password
   bcrypt.hash(password, 10, (err, hashedPassword) => {
     if (err) return res.status(500).json({ success: false, message: 'Error hashing password.' });
 
-    const query = 'INSERT INTO User (user_name, email, password, phone_number, role) VALUES (?, ?, ?, ?, ?)';
-    db.query(query, [user_name, email, hashedPassword, phone_number, role], (err) => {
+    // Insert the user into the User table
+    const userQuery = 'INSERT INTO User (user_name, email, password, phone_number, role) VALUES (?, ?, ?, ?, ?)';
+    db.query(userQuery, [user_name, email, hashedPassword, phone_number, role], (err, results) => {
       if (err) return res.status(500).json({ success: false, message: 'Error during sign-up.' });
-      res.json({ success: true, message: 'User created successfully!' });
+      // const userId = results.insertId;
+      // console.log('Inserted User ID:', userId);
+      // If the user role is 'Customer', insert the user_id into the Customer table
+      // if (role === 'Customer') {
+        const userId = results.insertId; // Get the newly created user's ID
+        const customerQuery = 'INSERT INTO Customer (user_id) VALUES (?)';
+        db.query(customerQuery, [userId], (err) => {
+          if (err) return res.status(500).json({ success: false, message: 'Error creating customer record.' });
+          return res.json({ success: true, message: 'Customer created successfully!' });
+        });
+      // } else {
+      //   // For other roles, just return success
+      //   res.json({ success: true, message: 'User created successfully!' });
+      // }
     });
   });
 });
+
 
 
 app.post('/login', (req, res) => {
@@ -329,38 +346,20 @@ app.put('/api/customer-details', authenticateJWT, (req, res) => {
   }
 });
 
-app.get('/api/technician-details/:technician_id', authenticateJWT, (req, res) => {
-  const technicianId = req.params.technician_id;
-
-  const query = `
+app.get('/api/technician-details/:technician_id', (req, res) => {
+  const { technician_id } = req.params;
+  const sql = `
     SELECT 
-      Technician.experienced_year, 
-      AVG(Booking.rating) AS rating, 
-      COUNT(Booking.booking_id) AS booking_count, 
-      COUNT(DISTINCT Booking.booking_id) AS reviews_count
+      Technician.experienced_year AS experience_years, 
+      AVG(Booking.rating) AS rating,
+      COUNT(Booking.review) AS reviews_count,
+      COUNT(Booking.booking_id) AS booking_count
     FROM Technician
     LEFT JOIN Booking ON Technician.user_id = Booking.technician_id
-    WHERE Technician.user_id = ?
-    GROUP BY Technician.user_id
-  `;
-  
-  db.query(query, [technicianId], (err, results) => {
-    if (err) {
-      console.error('Error fetching technician details:', err);
-      return res.status(500).json({ success: false, message: 'Error fetching technician details.' });
-    }
-    if (results.length === 0) {
-      return res.status(404).json({ success: false, message: 'Technician not found.' });
-    }
-
-    // Log the results to check the data returned from the database
-    console.log('Technician Details:', results);
-
-    const technicianDetails = results[0];
-    res.json({
-      success: true,
-      technicianDetails: technicianDetails
-    });
+    WHERE Technician.user_id = ?`;
+  db.query(sql, [technician_id], (err, results) => {
+    if (err) return res.status(500).send(err);
+    res.json(results[0]);
   });
 });
 
@@ -390,38 +389,82 @@ app.put('/update-profile', authenticateJWT, (req, res) => {
   });
 });
 
-// Create Booking (Customer books a Technician)
+
+// Create a booking
 app.post('/api/bookings', authenticateJWT, (req, res) => {
   const { technician_id, booking_date, status } = req.body;
-  const customer_id = req.user.user_id;
-
-  const query = 'INSERT INTO Booking (customer_id, technician_id, booking_date, status) VALUES (?, ?, ?, ?)';
-  db.query(query, [customer_id, technician_id, booking_date, status], (err, results) => {
-    if (err) return res.status(500).json({ success: false, message: 'Error creating booking.' });
-    res.json({ success: true, message: 'Booking created successfully!', booking_id: results.insertId });  
+  const sql = 'INSERT INTO Booking (customer_id, technician_id, booking_date, status) VALUES (?, ?, ?, ?)';
+  db.query(sql, [req.user.user_id, technician_id, booking_date, status], (err, results) => {
+    if (err) return res.status(500).send(err);
+    res.status(201).json({ booking_id: results.insertId });
   });
 });
 
-// Update Booking Status to Completed and Add Rating/Review
-app.put('/api/bookings/:booking_id', authenticateJWT, (req, res) => {
-  const { booking_id } = req.params;
-  const { status, rating, review } = req.body;
+// Get bookings
+app.get('/api/bookings', authenticateJWT, (req, res) => {
+  const sql = `
+    SELECT Booking.booking_id, Booking.booking_date, Booking.status, User.user_name AS technician_name
+    FROM Booking
+    JOIN User ON Booking.technician_id = User.user_id
+    WHERE Booking.customer_id = ?`;
+  db.query(sql, [req.user.user_id], (err, results) => {
+    if (err) return res.status(500).send(err);
+    res.json(results);
+  });
+});
+// API to update booking status
+app.put('/api/bookings/:bookingId', authenticateJWT, (req, res) => {
+  const { bookingId } = req.params;
+  const { status } = req.body;
 
-  if (status === 'Completed' && (rating === undefined || review === undefined)) {
-    return res.status(400).json({ success: false, message: 'Rating and review are required when completing the booking.' });
+  const validStatuses = ['Pending', 'Confirmed', 'Completed', 'Cancelled'];
+  if (!validStatuses.includes(status)) {
+    return res.status(400).json({ message: 'Invalid status' });
   }
 
-  const query = `
-    UPDATE Booking
-    SET status = ?, rating = ?, review = ?
-    WHERE booking_id = ? AND customer_id = ?
-  `;
+  db.query(
+    'UPDATE Booking SET status = ? WHERE booking_id = ?',
+    [status, bookingId],
+    (err, result) => {
+      if (err) return res.status(500).json({ message: 'Database error' });
+      res.json({ message: 'Booking status updated successfully' });
+    }
+  );
+});
+// Update booking review
+app.put('/api/bookings/:booking_id', authenticateJWT, (req, res) => {
+  const { booking_id } = req.params;
+  const { rating, review, status } = req.body;
 
-  db.query(query, [status, rating, review, booking_id, req.user.user_id], (err) => {
-    if (err) return res.status(500).json({ success: false, message: 'Error updating booking.' });
-    res.json({ success: true, message: 'Booking status updated successfully!' });
+  // Validate the rating (ensure it's between 1 and 10)
+  if (rating < 1 || rating > 10) {
+    return res.status(400).send('Rating must be between 1 and 10.');
+  }
+
+  // Validate review (optional, but can be customized for length)
+  if (review && review.length > 500) {
+    return res.status(400).send('Review cannot exceed 500 characters.');
+  }
+
+  // SQL query to update the booking
+  const sql = 'UPDATE Booking SET rating = ?, review = ? WHERE booking_id = ?';
+
+  // Execute the query
+  db.query(sql, [rating, review, status, booking_id], (err, result) => {
+    if (err) {
+      console.error('Error executing query:', err);
+      return res.status(500).send('Server error while updating the booking.');
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).send('Booking not found.');
+    }
+
+    // Successfully updated the booking
+    res.send('Booking updated successfully.');
   });
 });
+
 
 // Get Customer Details
 app.get('/api/customer-details', authenticateJWT, (req, res) => {

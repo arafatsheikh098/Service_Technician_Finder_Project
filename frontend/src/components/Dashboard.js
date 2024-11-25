@@ -38,6 +38,8 @@ const Dashboard = () => {
   });
   const [isUpdatingInfo, setIsUpdatingInfo] = useState(false); // For toggling update form
   const [isCustomerDetailsVisible, setIsCustomerDetailsVisible] = useState(false); // For toggling customer details visibility
+  const [confirmationMessage, setConfirmationMessage] = useState(''); // Confirmation message state
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -93,6 +95,7 @@ const Dashboard = () => {
 
   const handleTechnicianChange = (e) => {
     const technicianId = e.target.value;
+    console.log(technicianId)
     setSelectedTechnician(technicianId);
     if (technicianId) {
       axios
@@ -122,7 +125,13 @@ const Dashboard = () => {
           { technician_id: selectedTechnician, booking_date: bookingDate, status },
           { headers: { Authorization: `Bearer ${token}` } }
         )
-        .then((response) => setBookings([...bookings, response.data]))
+        .then((response) => {
+          setBookings([...bookings, response.data]);
+          setConfirmationMessage('Booking successful!');  // Show confirmation message
+          setTimeout(() => {
+            setConfirmationMessage('');  // Hide confirmation message after 3 seconds
+          }, 3000);
+        })
         .catch((error) => {
           setErrorMessage('Error creating booking. Please try again.');
           console.error(error);
@@ -281,21 +290,32 @@ const Dashboard = () => {
         />
         <button type="submit">Book Technician</button>
       </form>
+      {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
+      {confirmationMessage && <p style={{ color: 'green' }}>{confirmationMessage}</p>}
 
       {/* Booking List */}
       <h3>Your Bookings</h3>
-      <ul>
-        {bookings.map((booking) => (
-          <li key={booking.booking_id}>
-            {booking.technician_name} - {booking.booking_date} - {booking.status}
-            {booking.status === 'Pending' && (
-              <button onClick={() => handleReviewSubmit(booking.booking_id)}>
-                Provide Review
-              </button>
-            )}
-          </li>
-        ))}
-      </ul>
+      {/* {console.log("Bookings Data:", bookings)} */}
+    <ul>
+  {bookings.map((booking) => (
+    <li key={booking.booking_id} className="booking-item">
+      <div className="booking-info">
+        {booking.technician_name} - {booking.booking_date} - {booking.status}
+      </div>
+      
+      {/* Show "Provide Review" button only for Completed bookings */}
+      {booking.status === 'Completed' && (
+        <button 
+          className="provide-review-btn" 
+          onClick={() => handleReviewSubmit(booking.booking_id)}
+        >
+          Provide Review
+        </button>
+      )}
+    </li>
+  ))}
+</ul>
+
     </div>
   );
 };

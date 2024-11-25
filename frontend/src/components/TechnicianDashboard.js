@@ -124,6 +124,32 @@ const TechnicianDashboard = () => {
     }
   };
 
+  // Function to handle status change
+  const handleStatusChange = (bookingId, newStatus) => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    axios
+      .put(
+        `http://localhost:8000/api/bookings/${bookingId}`,
+        { status: newStatus },
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      .then((response) => {
+        // Update the status in the local state after successful API call
+        setPendingBookings((prevBookings) =>
+          prevBookings.map((booking) =>
+            booking.booking_id === bookingId ? { ...booking, status: newStatus } : booking
+          )
+        );
+        alert('Booking status updated successfully');
+      })
+      .catch((error) => {
+        console.error('Error updating status:', error);
+        alert('Error updating status');
+      });
+  };
+
   return (
     <div className="dashboard">
       <h1>Technician Dashboard</h1>
@@ -197,7 +223,17 @@ const TechnicianDashboard = () => {
               <strong>Customer:</strong> {booking.customer_name} <br />
               <strong>Phone Number:</strong> {booking.customer_phone_number} <br />
               <strong>Date:</strong> {booking.booking_date} <br />
-              <strong>Status:</strong> {booking.status} <br />
+              <strong>Status:</strong> 
+              <select
+                value={booking.status}
+                onChange={(e) => handleStatusChange(booking.booking_id, e.target.value)}
+              >
+                <option value="Pending">Pending</option>
+                <option value="Confirmed">Confirmed</option>
+                <option value="Completed">Completed</option>
+                <option value="Cancelled">Cancelled</option>
+              </select>
+              <br />
             </li>
           ))}
         </ul>
@@ -220,7 +256,7 @@ const TechnicianDashboard = () => {
           ))}
         </ul>
       ) : (
-        <p>No booking history available yet.</p>
+        <p>No booking history available.</p>
       )}
     </div>
   );
