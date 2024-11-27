@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import './Dashboard.css'; // Reuse the CSS file
+import './Dashboard.css';
 
 const TechnicianDashboard = () => {
   const [message, setMessage] = useState('');
@@ -12,11 +12,11 @@ const TechnicianDashboard = () => {
     experience_years: 0,
     rating: 0,
   });
-  const [pendingBookings, setPendingBookings] = useState([]); // Default empty array
-  const [bookingHistory, setBookingHistory] = useState([]); // For completed bookings
+  const [pendingBookings, setPendingBookings] = useState([]); 
+  const [bookingHistory, setBookingHistory] = useState([]); 
   const [errorMessage, setErrorMessage] = useState('');
   const [isTechnicianDetailsVisible, setIsTechnicianDetailsVisible] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);  // State for toggling the update form
+  const [isEditing, setIsEditing] = useState(false); 
   const [updatedInfo, setUpdatedInfo] = useState({
     user_name: '',
     phone_number: '',

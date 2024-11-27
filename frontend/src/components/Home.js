@@ -1,9 +1,9 @@
-// src/pages/Home.js
+
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './Home.css'; // Ensure you have this file for styling
-import logo from '../assets/logo.png'; // Update with the correct path to your logo
+import './Home.css'; 
+import logo from '../assets/logo.png';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -36,9 +36,9 @@ const Home = () => {
 
   return (
     <div className="home-container">
-      {/* Navbar */}
+     
       <nav className="navbar">
-        <div className="logo" onClick={() => handleNavigate('/')}>
+        <div className="logo" onClick={() => handleNavigate('/home')}>
           <img src={logo} alt="Service Technician Finder Logo" />
           <span>Service Technician Finder</span>
         </div>

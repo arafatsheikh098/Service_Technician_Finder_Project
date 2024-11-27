@@ -28,7 +28,7 @@ const ForgotPassword = () => {
 
         // Redirect to login page after 5 seconds
         setTimeout(() => {
-          navigate('/login'); // Replace '/login' with your login page route
+          navigate('/login'); 
         }, 5000);
       } else {
         setError(response.data.message || 'Error resetting password.');

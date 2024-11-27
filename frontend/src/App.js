@@ -8,7 +8,7 @@ import Dashboard from './components/Dashboard';
 import TechnicianDashboard from './components/TechnicianDashboard';
 import UpdateProfile from './components/UpdateProfile';
 import ForgotPassword from './components/ForgotPassword';        
-// Uncomment when you are ready to implement these routes
+
 // import VerifyCode from './components/VerifyCode';                
 // import ResetPassword from './components/ResetPassword';          
 
@@ -19,7 +19,7 @@ import ForgotPassword from './components/ForgotPassword';
 // };
 const PrivateRoute = ({ element, allowedRoles }) => {
   const token = localStorage.getItem('token');
-  const role = localStorage.getItem('role'); // Retrieve role
+  const role = localStorage.getItem('role');
 
   if (token && allowedRoles.includes(role)) {
     return element;

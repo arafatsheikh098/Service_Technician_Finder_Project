@@ -6,7 +6,7 @@ import "react-toastify/dist/ReactToastify.css";
 import styles from "../styles/SignUp.module.css";
 
 // Validation function
-export const validate = (data) => {
+ const validate = (data) => {
   const errors = {};
 
   if (!data.user_name.trim()) errors.user_name = "Name is required.";
@@ -34,7 +34,7 @@ const SignUp = () => {
 
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
-  const navigate = useNavigate(); // useNavigate hook to redirect
+  const navigate = useNavigate(); 
 
   // Update errors whenever the data changes
   useEffect(() => {
@@ -57,7 +57,7 @@ const SignUp = () => {
     setErrors(validationErrors);
 
     if (Object.keys(validationErrors).length === 0) {
-      const url = `http://localhost:8000/signup`; // Ensure this URL matches the backend API route
+      const url = `http://localhost:8000/signup`; 
       try {
         const response = await axios.post(url, data);
         if (response.data.success) {

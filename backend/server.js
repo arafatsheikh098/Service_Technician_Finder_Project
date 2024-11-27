@@ -13,7 +13,7 @@ app.use(bodyParser.json());
 const db = mysql.createConnection({
   host: 'localhost',
   user: 'root',
-  password: '***REMOVED***', // Replace with your MySQL password
+  password: '***REMOVED***', 
   database: 'ServiceTechnicianFinder',
 });
 
@@ -37,26 +37,20 @@ app.post('/signup', (req, res) => {
     const userQuery = 'INSERT INTO User (user_name, email, password, phone_number, role) VALUES (?, ?, ?, ?, ?)';
     db.query(userQuery, [user_name, email, hashedPassword, phone_number, role], (err, results) => {
       if (err) return res.status(500).json({ success: false, message: 'Error during sign-up.' });
-      // const userId = results.insertId;
-      // console.log('Inserted User ID:', userId);
-      // If the user role is 'Customer', insert the user_id into the Customer table
-      // if (role === 'Customer') {
-        const userId = results.insertId; // Get the newly created user's ID
+     
+        const userId = results.insertId; 
         const customerQuery = 'INSERT INTO Customer (user_id) VALUES (?)';
         db.query(customerQuery, [userId], (err) => {
           if (err) return res.status(500).json({ success: false, message: 'Error creating customer record.' });
           return res.json({ success: true, message: 'Customer created successfully!' });
         });
-      // } else {
-      //   // For other roles, just return success
-      //   res.json({ success: true, message: 'User created successfully!' });
-      // }
+    
     });
   });
 });
 
 
-
+//User login 
 app.post('/login', (req, res) => {
   const { email, password } = req.body;
   const query = 'SELECT * FROM User WHERE email = ?';
@@ -84,6 +78,7 @@ app.post('/login', (req, res) => {
     });
   });
 });
+
 // Middleware for authentication
 const authenticateJWT = (req, res, next) => {
   const token = req.header('Authorization')?.split(' ')[1];
@@ -95,21 +90,23 @@ const authenticateJWT = (req, res, next) => {
     next();
   });
 };
-const authenticateJWTWithRole = (allowedRoles) => (req, res, next) => {
-  const token = req.header('Authorization')?.split(' ')[1];
-  if (!token) return res.status(403).json({ success: false, message: 'Access denied.' });
 
-  jwt.verify(token, SECRET_KEY, (err, user) => {
-    if (err) return res.status(403).json({ success: false, message: 'Invalid token.' });
+// const authenticateJWTWithRole = (allowedRoles) => (req, res, next) => {
+//   const token = req.header('Authorization')?.split(' ')[1];
+//   if (!token) return res.status(403).json({ success: false, message: 'Access denied.' });
 
-    if (!allowedRoles.includes(user.role)) {
-      return res.status(403).json({ success: false, message: 'Insufficient permissions.' });
-    }
+//   jwt.verify(token, SECRET_KEY, (err, user) => {
+//     if (err) return res.status(403).json({ success: false, message: 'Invalid token.' });
 
-    req.user = user;
-    next();
-  });
-};
+//     if (!allowedRoles.includes(user.role)) {
+//       return res.status(403).json({ success: false, message: 'Insufficient permissions.' });
+//     }
+
+//     req.user = user;
+//     next();
+//   });
+// };
+
 // Reset Password
 app.post('/reset-password', (req, res) => {
   const { email, password } = req.body;
@@ -137,14 +134,16 @@ app.post('/reset-password', (req, res) => {
     });
   });
 });
-// Dashboard Endpoint
+
+// Customer Dashboard Endpoint
 app.get('/dashboard', authenticateJWT, (req, res) => {
   res.json({
     success: true,
     message: `Welcome to the dashboard, user ${req.user.user_id}`,
-    role: req.user.role, // Add role to response
+    role: req.user.role, 
   });
 });
+
 // Technician Dashboard Endpoint
 app.get('/technician-dashboard', authenticateJWT, (req, res) => {
   // Check if the user's role is 'technician'
@@ -154,17 +153,17 @@ app.get('/technician-dashboard', authenticateJWT, (req, res) => {
       message: 'Access denied. Only technicians can access this dashboard.',
     });
   }
-
   res.json({
     success: true,
     message: `Welcome to the Technician Dashboard, Technician ID: ${req.user.user_id}`,
-    role: req.user.role, // Include role for clarity
+    role: req.user.role,
   });
 });
+
 //technician-details
 app.get('/technician-details', authenticateJWT, (req, res) => {
   const technicianId = req.user.user_id;
-  console.log("Fetching details for technician ID:", technicianId); // Debugging log
+  // console.log("Fetching details for technician ID:", technicianId); 
 
   const query = `
     SELECT 
@@ -180,11 +179,11 @@ app.get('/technician-details', authenticateJWT, (req, res) => {
 
   db.query(query, [technicianId, technicianId], (err, results) => {
     if (err) {
-      console.error('Error fetching technician details:', err); // Log the error for debugging
+      // console.error('Error fetching technician details:', err); 
       return res.status(500).json({ success: false, message: 'Error fetching technician details.' });
     }
 
-    console.log("Technician details:", results); // Log the query result for debugging
+    // console.log("Technician details:", results); 
 
     if (results.length === 0) {
       return res.status(404).json({ success: false, message: 'Technician not found.' });
@@ -303,7 +302,7 @@ app.put('/api/customer-details', authenticateJWT, (req, res) => {
     return res.status(400).json({ success: false, message: 'All fields are required.' });
   }
 
-  // If the email is not changed, skip the uniqueness check
+  // If the email is not changed
   if (email === req.user.email) {
     updateProfile();
   } else {
@@ -481,7 +480,7 @@ app.get('/api/customer-details', authenticateJWT, (req, res) => {
     if (results.length === 0) {
       return res.status(404).json({ success: false, message: 'Customer not found.' });
     }
-    res.json(results[0]);  // Send back the customer details
+    res.json(results[0]);  
   });
 });
 
