@@ -7,7 +7,10 @@ import Dashboard from './components/Dashboard';
 // import CustomerDashboard from './components/CustomerDashboard';
 import TechnicianDashboard from './components/TechnicianDashboard';
 import UpdateProfile from './components/UpdateProfile';
-import ForgotPassword from './components/ForgotPassword';        
+import ForgotPassword from './components/ForgotPassword'; 
+import Contact from './components/Contact'; 
+import About from './components/About';
+import Services from './components/Services';      
 
 // import VerifyCode from './components/VerifyCode';                
 // import ResetPassword from './components/ResetPassword';          
@@ -33,6 +36,9 @@ function App() {
       <Routes>
         <Route path="/" element={localStorage.getItem('token') ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} />
         <Route path="/home" element={<Home />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/services" element={<Services />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
         {/* <Route path="/dashboard" element={<PrivateRoute element={<Dashboard />} />} /> */}

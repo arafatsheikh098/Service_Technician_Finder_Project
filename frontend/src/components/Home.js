@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import './Contact'
 import './Home.css'; 
 import logo from '../assets/logo.png';
 
@@ -43,10 +44,11 @@ const Home = () => {
           <span>Service Technician Finder</span>
         </div>
         <ul className="nav-links">
-          <li onClick={toggleServices}>Services We Provide</li>
-          <li onClick={() => handleNavigate('/contact')}>Contact Us</li>
+          
+          <li onClick={() => handleNavigate('/services')}>Services We Provide</li>
+          <li onClick={() => handleNavigate('/Contact')}>Contact Us</li>
           <li onClick={() => handleNavigate('/login')}>Log In</li>
-          <li onClick={() => handleNavigate('/about')}>About</li>
+          <li onClick={() => handleNavigate('/About')}>About</li>
         </ul>
       </nav>
 
@@ -61,19 +63,7 @@ const Home = () => {
         </button>
       </div>
 
-      {/* Services List - Only displayed when showServices is true */}
-      {showServices && (
-        <div className="services-main">
-          <h2>Services We Provide</h2>
-          <ul className="services-list">
-            {services.map((service, index) => (
-              <li key={index} className="service-item">
-                <span>{service}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+    
 
       {/* Footer */}
       <footer className="footer">

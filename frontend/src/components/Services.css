@@ -1,0 +1,33 @@
+.services-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    text-align: center;
+    font-family: Arial, sans-serif;
+  }
+  
+  .services-container h1 {
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+    color: #2c3e50;
+  }
+  
+  .services-list {
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  .service-item {
+    font-size: 1.2rem;
+    margin: 10px 0;
+    padding: 10px;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+  }
+  
+  .service-item:hover {
+    background-color: #e9ecef;
+    cursor: pointer;
+  }
+  
