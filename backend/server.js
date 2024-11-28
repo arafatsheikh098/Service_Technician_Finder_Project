@@ -231,7 +231,7 @@ app.get('/booking-history', authenticateJWT, (req, res) => {
       User.phone_number AS customer_phone_number
     FROM Booking
     JOIN User ON Booking.customer_id = User.user_id
-    WHERE Booking.technician_id = ? AND Booking.status = 'Completed'
+    WHERE Booking.technician_id = ? AND Booking.status != 'Pending'
   `;
 
   db.query(query, [technicianId], (err, results) => {

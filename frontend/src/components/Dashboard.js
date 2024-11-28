@@ -53,12 +53,12 @@ const Dashboard = () => {
         .then((response) => setMessage(response.data.message))
         .catch(() => setMessage('Access denied. Please log in.'));
 
-      // axios
-      //   .get('http://localhost:8000/api/customer-details', {
-      //     headers: { Authorization: `Bearer ${token}` },
-      //   })
-      //   .then((response) => setCustomerDetails(response.data))
-      //   .catch((error) => console.error('Error fetching customer details:', error));
+      axios
+        .get('http://localhost:8000/api/customer-details', {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((response) => setCustomerDetails(response.data))
+        .catch((error) => console.error('Error fetching customer details:', error));
 
       axios
         .get('http://localhost:8000/api/cities')
@@ -185,7 +185,7 @@ const Dashboard = () => {
           setConfirmationMessage(response.data.message);
           setRating('');
           setReview('');
-          setSelectedBookingId(null); // Reset the selected booking
+          setSelectedBookingId(null); 
         })
         .catch((error) => {
           setErrorMessage('Error updating booking. Please try again.');
@@ -241,7 +241,7 @@ const Dashboard = () => {
   };
 
   const toggleCustomerDetails = () => {
-    setIsCustomerDetailsVisible(!isCustomerDetailsVisible); // Toggle visibility
+    setIsCustomerDetailsVisible(!isCustomerDetailsVisible); 
   };
 
   return (

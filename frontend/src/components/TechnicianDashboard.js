@@ -9,7 +9,7 @@ const TechnicianDashboard = () => {
     user_name: '',
     phone_number: '',
     email: '',
-    experience_years: 0,
+    experienced_year: 0,
     rating: 0,
   });
   const [pendingBookings, setPendingBookings] = useState([]); 
@@ -207,7 +207,7 @@ const TechnicianDashboard = () => {
               <p><strong>Name:</strong> {technicianDetails.user_name}</p>
               <p><strong>Phone Number:</strong> {technicianDetails.phone_number}</p>
               <p><strong>Email:</strong> {technicianDetails.email}</p>
-              <p><strong>Experience:</strong> {technicianDetails.experience_years} years</p>
+              <p><strong>Experience:</strong> {technicianDetails.experienced_year} years</p>
               <p><strong>Rating:</strong> {technicianDetails.rating}</p>
               <button onClick={() => setIsEditing(true)}>Edit Info</button>
             </>
