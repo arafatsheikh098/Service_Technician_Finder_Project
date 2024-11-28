@@ -19,6 +19,7 @@ const Dashboard = () => {
   const [selectedArea, setSelectedArea] = useState('');
   const [technicians, setTechnicians] = useState([]);
   const [bookings, setBookings] = useState([]);
+  const [selectedBookingId, setSelectedBookingId] = useState(null);
   const [selectedTechnician, setSelectedTechnician] = useState('');
   const [technicianDetails, setTechnicianDetails] = useState({
     experience_years: 0,
@@ -52,12 +53,12 @@ const Dashboard = () => {
         .then((response) => setMessage(response.data.message))
         .catch(() => setMessage('Access denied. Please log in.'));
 
-      axios
-        .get('http://localhost:8000/api/customer-details', {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        .then((response) => setCustomerDetails(response.data))
-        .catch((error) => console.error('Error fetching customer details:', error));
+      // axios
+      //   .get('http://localhost:8000/api/customer-details', {
+      //     headers: { Authorization: `Bearer ${token}` },
+      //   })
+      //   .then((response) => setCustomerDetails(response.data))
+      //   .catch((error) => console.error('Error fetching customer details:', error));
 
       axios
         .get('http://localhost:8000/api/cities')
@@ -74,7 +75,20 @@ const Dashboard = () => {
       navigate('/login');
     }
   }, [navigate]);
-
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      axios
+        .get('http://localhost:8000/api/bookings', {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((response) => setBookings(response.data))
+        .catch((error) => console.error('Error fetching bookings:', error));
+    } else {
+      navigate('/login');
+    }
+  }, [navigate]);
+  
   useEffect(() => {
     if (selectedCity) {
       axios
@@ -140,17 +154,27 @@ const Dashboard = () => {
       setErrorMessage('Please select a technician and a date.');
     }
   };
-
+  const toggleReviewForm = (booking_id) => {
+    setSelectedBookingId(booking_id === selectedBookingId ? null : booking_id);
+    setErrorMessage('');
+    setConfirmationMessage('');
+  };
   const handleReviewSubmit = (booking_id) => {
     const token = localStorage.getItem('token');
     if (rating && review) {
+      console.log('Submitting Review:');
+      console.log('Booking ID:', booking_id);
+      console.log('Token:', token);
+      console.log(status);
+      console.log('Rating:', rating);
+      console.log('Review:', review);
       axios
         .put(
           `http://localhost:8000/api/bookings/${booking_id}`,
           { status: 'Completed', rating, review },
           { headers: { Authorization: `Bearer ${token}` } }
         )
-        .then(() => {
+        .then((response) => {
           setBookings(
             bookings.map((booking) =>
               booking.booking_id === booking_id
@@ -158,6 +182,10 @@ const Dashboard = () => {
                 : booking
             )
           );
+          setConfirmationMessage(response.data.message);
+          setRating('');
+          setReview('');
+          setSelectedBookingId(null); // Reset the selected booking
         })
         .catch((error) => {
           setErrorMessage('Error updating booking. Please try again.');
@@ -295,27 +323,61 @@ const Dashboard = () => {
 
       {/* Booking List */}
       <h3>Your Bookings</h3>
-      {/* {console.log("Bookings Data:", bookings)} */}
-    <ul>
+      <ul>
   {bookings.map((booking) => (
     <li key={booking.booking_id} className="booking-item">
       <div className="booking-info">
         {booking.technician_name} - {booking.booking_date} - {booking.status}
       </div>
-      
-      {/* Show "Provide Review" button only for Completed bookings */}
-      {booking.status === 'Completed' && (
-        <button 
-          className="provide-review-btn" 
-          onClick={() => handleReviewSubmit(booking.booking_id)}
-        >
-          Provide Review
-        </button>
+
+      {/* Show "Provide Review" button only if status is 'Completed' and no review exists */}
+      {booking.status === 'Completed' && !booking.review ? (
+        selectedBookingId === booking.booking_id ? (
+          <div className="review-form">
+            <label htmlFor="rating">Rating:</label>
+            <select
+              id="rating"
+              value={rating}
+              onChange={(e) => setRating(e.target.value)}
+            >
+              <option value="">Select Rating</option>
+              {Array.from({ length: 10 }, (_, i) => i + 1).map((num) => (
+                <option key={num} value={num}>
+                  {num}
+                </option>
+              ))}
+            </select>
+
+            <label htmlFor="review">Review:</label>
+            <textarea
+              id="review"
+              value={review}
+              onChange={(e) => setReview(e.target.value)}
+              placeholder="Write your review here..."
+            ></textarea>
+
+            <button
+              onClick={() => handleReviewSubmit(booking.booking_id)}
+            >
+              Submit Review
+            </button>
+            <button onClick={() => toggleReviewForm(null)}>Cancel</button>
+          </div>
+        ) : (
+          <button onClick={() => toggleReviewForm(booking.booking_id)}>
+            Provide Review
+          </button>
+        )
+      ) : (
+        <span>Status: {booking.status}</span>
       )}
     </li>
   ))}
 </ul>
 
+
+      {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
+      {confirmationMessage && <p style={{ color: 'green' }}>{confirmationMessage}</p>}
     </div>
   );
 };

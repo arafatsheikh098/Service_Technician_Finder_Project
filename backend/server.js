@@ -411,57 +411,59 @@ app.get('/api/bookings', authenticateJWT, (req, res) => {
     res.json(results);
   });
 });
-// API to update booking status
+// API to update booking status and review
 app.put('/api/bookings/:bookingId', authenticateJWT, (req, res) => {
   const { bookingId } = req.params;
-  const { status } = req.body;
+  const { status, rating, review } = req.body;
 
   const validStatuses = ['Pending', 'Confirmed', 'Completed', 'Cancelled'];
+
+  // Validate the status
   if (!validStatuses.includes(status)) {
     return res.status(400).json({ message: 'Invalid status' });
   }
 
-  db.query(
-    'UPDATE Booking SET status = ? WHERE booking_id = ?',
-    [status, bookingId],
-    (err, result) => {
+  // If status is 'Completed', validate the rating and review
+  if (status === 'Completed') {
+    // Validate the rating (ensure it's between 1 and 10)
+    if (rating < 1 || rating > 10) {
+      return res.status(400).json({ message: 'Rating must be between 1 and 10.' });
+    }
+
+    // Validate review (optional, but can be customized for length)
+    if (review && review.length > 500) {
+      return res.status(400).json({ message: 'Review cannot exceed 500 characters.' });
+    }
+
+    // SQL query to update the booking with status, rating, and review
+    const sql = 'UPDATE Booking SET status = ?, rating = ?, review = ? WHERE booking_id = ?';
+
+    db.query(sql, [status, rating, review, bookingId], (err, result) => {
+      if (err) {
+        console.error('Error executing query:', err);
+        return res.status(500).json({ message: 'Server error while updating the booking.' });
+      }
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ message: 'Booking not found.' });
+      }
+
+      res.json({ message: 'Booking updated successfully.' });
+    });
+  } else {
+    // SQL query to update only the status
+    const sql = 'UPDATE Booking SET status = ? WHERE booking_id = ?';
+
+    db.query(sql, [status, bookingId], (err, result) => {
       if (err) return res.status(500).json({ message: 'Database error' });
-      res.json({ message: 'Booking status updated successfully' });
-    }
-  );
-});
-// Update booking review
-app.put('/api/bookings/:booking_id', authenticateJWT, (req, res) => {
-  const { booking_id } = req.params;
-  const { rating, review, status } = req.body;
 
-  // Validate the rating (ensure it's between 1 and 10)
-  if (rating < 1 || rating > 10) {
-    return res.status(400).send('Rating must be between 1 and 10.');
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ message: 'Booking not found.' });
+      }
+
+      res.json({ message: 'Booking status updated successfully.' });
+    });
   }
-
-  // Validate review (optional, but can be customized for length)
-  if (review && review.length > 500) {
-    return res.status(400).send('Review cannot exceed 500 characters.');
-  }
-
-  // SQL query to update the booking
-  const sql = 'UPDATE Booking SET rating = ?, review = ? WHERE booking_id = ?';
-
-  // Execute the query
-  db.query(sql, [rating, review, status, booking_id], (err, result) => {
-    if (err) {
-      console.error('Error executing query:', err);
-      return res.status(500).send('Server error while updating the booking.');
-    }
-
-    if (result.affectedRows === 0) {
-      return res.status(404).send('Booking not found.');
-    }
-
-    // Successfully updated the booking
-    res.send('Booking updated successfully.');
-  });
 });
 
 
