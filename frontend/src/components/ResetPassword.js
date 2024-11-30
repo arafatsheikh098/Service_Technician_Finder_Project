@@ -20,7 +20,7 @@ const ResetPassword = ({ email, code }) => {
 
       if (response.data.success) {
         setMessage('Password reset successful.');
-        // Redirect to login page or show success
+        
       } else {
         setError(response.data.message || 'Error resetting password.');
       }

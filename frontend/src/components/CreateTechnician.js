@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import './CreateTechnician.css'; // Import the CSS file
 
 const CreateTechnician = () => {
   const [services, setServices] = useState([]);
@@ -14,10 +15,14 @@ const CreateTechnician = () => {
     email: '',
     experienced_year: '',
     location: '',
-    service_names: [], // Array for storing selected service names
+    service_names: [],
+  });
+  const [errors, setErrors] = useState({
+    phone_number: '',
+    email: '',
   });
   const navigate = useNavigate();
-  // Fetch cities using axios
+
   useEffect(() => {
     axios
       .get('http://localhost:8000/api/cities')
@@ -25,18 +30,15 @@ const CreateTechnician = () => {
       .catch((error) => console.error('Error fetching cities:', error));
   }, []);
 
-  // Fetch services using axios
   useEffect(() => {
     axios
       .get('http://localhost:8000/api/services')
       .then((response) => {
-        console.log('Services:', response.data); // Log to ensure services are being fetched
         setServices(response.data);
       })
       .catch((error) => console.error('Error fetching services:', error));
   }, []);
 
-  // Fetch areas when a city is selected
   const handleCityChange = (e) => {
     const cityId = e.target.value;
     setSelectedCity(cityId);
@@ -47,13 +49,11 @@ const CreateTechnician = () => {
       .catch((error) => console.error('Error fetching areas:', error));
   };
 
-  // Handle form input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  // Handle service selection change
   const handleServiceChange = (e) => {
     const selectedOptions = Array.from(e.target.selectedOptions);
     const selectedServiceNames = selectedOptions.map((option) => option.value);
@@ -63,30 +63,53 @@ const CreateTechnician = () => {
       service_names: selectedServiceNames,
     }));
   };
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     navigate('/login');
   };
 
-  // Submit handler
+  const validatePhoneNumber = (phone) => {
+    const phoneRegex = /^[0-9]{11}$/; 
+    return phoneRegex.test(phone);
+  };
+
+  const validateEmail = (email) => {
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return emailRegex.test(email);
+  };
+
   const handleSubmit = (e) => {
-    e.preventDefault(); // Prevent default form submission
+    e.preventDefault();
+
+    // Validate phone number
+    if (!validatePhoneNumber(formData.phone_number)) {
+      setErrors({ ...errors, phone_number: 'Invalid phone number. Must be 11 digits.' });
+      return;
+    } else {
+      setErrors({ ...errors, phone_number: '' });
+    }
+
+    // Validate email
+    if (!validateEmail(formData.email)) {
+      setErrors({ ...errors, email: 'Invalid email address.' });
+      return;
+    } else {
+      setErrors({ ...errors, email: '' });
+    }
+
     console.log('Form Data:', formData);
-    
+
     axios
-      .post('http://localhost:8000/create-technician', formData,
-        {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`, // Assuming the token is stored in localStorage
-              'Content-Type': 'application/json', // Ensure proper content type
-            },
-          }
-      )
+      .post('http://localhost:8000/create-technician', formData, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json',
+        },
+      })
       .then((response) => {
         console.log('Technician created successfully:', response.data);
-        // Handle success response, e.g., show a success message
         alert('Technician created successfully!');
-        // Optionally, reset the form
         setFormData({
           user_name: '',
           password: '',
@@ -99,18 +122,20 @@ const CreateTechnician = () => {
       })
       .catch((error) => {
         console.error('Error creating technician:', error);
-        // Handle error response, e.g., show an error message
         alert('Error creating technician. Please try again.');
       });
   };
 
   return (
     <div>
-         <button onClick={handleLogout}>Logout</button>
-      <h2>Create Technician</h2>
+      <button className="logout-button" onClick={handleLogout}>
+        Logout
+      </button>
 
-      <form onSubmit={handleSubmit}>
-        <div>
+      <h2 className="create-technician-form-title">Create Technician</h2>
+
+      <form onSubmit={handleSubmit} className="create-technician-form">
+        <div className="form-field">
           <label>User Name:</label>
           <input
             type="text"
@@ -120,7 +145,8 @@ const CreateTechnician = () => {
             required
           />
         </div>
-        <div>
+
+        <div className="form-field">
           <label>Password:</label>
           <input
             type="password"
@@ -130,7 +156,8 @@ const CreateTechnician = () => {
             required
           />
         </div>
-        <div>
+
+        <div className="form-field">
           <label>Phone Number:</label>
           <input
             type="text"
@@ -139,8 +166,10 @@ const CreateTechnician = () => {
             onChange={handleInputChange}
             required
           />
+          {errors.phone_number && <p className="error">{errors.phone_number}</p>}
         </div>
-        <div>
+
+        <div className="form-field">
           <label>Email:</label>
           <input
             type="email"
@@ -149,8 +178,10 @@ const CreateTechnician = () => {
             onChange={handleInputChange}
             required
           />
+          {errors.email && <p className="error">{errors.email}</p>}
         </div>
-        <div>
+
+        <div className="form-field">
           <label>Experience Years:</label>
           <input
             type="number"
@@ -160,7 +191,8 @@ const CreateTechnician = () => {
             required
           />
         </div>
-        <div>
+
+        <div className="form-field">
           <label>City:</label>
           <select value={selectedCity} onChange={handleCityChange} required>
             <option value="">Select City</option>
@@ -171,7 +203,8 @@ const CreateTechnician = () => {
             ))}
           </select>
         </div>
-        <div>
+
+        <div className="form-field">
           <label>Area:</label>
           <select
             name="location"
@@ -187,7 +220,8 @@ const CreateTechnician = () => {
             ))}
           </select>
         </div>
-        <div>
+
+        <div className="form-field">
           <label>Services:</label>
           <select
             name="service_names"
@@ -203,6 +237,7 @@ const CreateTechnician = () => {
             ))}
           </select>
         </div>
+
         <button type="submit">Create Technician</button>
       </form>
     </div>
