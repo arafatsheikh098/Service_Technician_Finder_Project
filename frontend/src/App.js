@@ -10,7 +10,8 @@ import UpdateProfile from './components/UpdateProfile';
 import ForgotPassword from './components/ForgotPassword'; 
 import Contact from './components/Contact'; 
 import About from './components/About';
-import Services from './components/Services';      
+import Services from './components/Services';
+import CreateTechnician from './components/CreateTechnician';      
 
 // import VerifyCode from './components/VerifyCode';                
 // import ResetPassword from './components/ResetPassword';          
@@ -53,7 +54,7 @@ function App() {
         <Route path="/update-profile" element={<UpdateProfile />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />  {/* Route for forgot password */}
         {/* Add routes for verify code and reset password */}
-        {/* <Route path="/verify-code" element={<VerifyCode />} /> */}
+         <Route path="/create-technician" element={<CreateTechnician />} /> 
         {/* <Route path="/reset-password" element={<ResetPassword />} /> */}
       </Routes>
     </Router>

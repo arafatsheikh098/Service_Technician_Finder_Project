@@ -29,7 +29,7 @@ const ForgotPassword = () => {
         // Redirect to login page after 5 seconds
         setTimeout(() => {
           navigate('/login'); 
-        }, 5000);
+        }, 2000);
       } else {
         setError(response.data.message || 'Error resetting password.');
       }

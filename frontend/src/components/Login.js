@@ -37,7 +37,12 @@ const Login = () => {
           navigate('/dashboard');
         } else if (response.data.role === 'Technician') {
           navigate('/technician-dashboard');
-        } else {
+          
+        }
+        else if (response.data.role === 'Admin') {
+          navigate('/create-technician');
+        }
+           else {
           setError('Invalid user role.');
         }
       } else {

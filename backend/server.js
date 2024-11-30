@@ -50,7 +50,6 @@ app.post('/signup', (req, res) => {
 });
 
 
-//User login 
 app.post('/login', (req, res) => {
   const { email, password } = req.body;
   const query = 'SELECT * FROM User WHERE email = ?';
@@ -69,6 +68,14 @@ app.post('/login', (req, res) => {
 
       const token = jwt.sign({ user_id: user.user_id, role: user.role }, SECRET_KEY, { expiresIn: '1h' });
 
+      // Update the last login timestamp
+      const updateQuery = 'UPDATE Customer SET last_login = NOW() WHERE user_id = ?';
+      db.query(updateQuery, [user.user_id], (updateErr) => {
+        if (updateErr) {
+          console.error('Error updating last login:', updateErr);
+        }
+      });
+
       res.json({
         success: true,
         message: 'Login successful!',
@@ -78,6 +85,7 @@ app.post('/login', (req, res) => {
     });
   });
 });
+
 
 // Middleware for authentication
 const authenticateJWT = (req, res, next) => {
@@ -137,12 +145,37 @@ app.post('/reset-password', (req, res) => {
 
 // Customer Dashboard Endpoint
 app.get('/dashboard', authenticateJWT, (req, res) => {
-  res.json({
-    success: true,
-    message: `Welcome to the dashboard, user ${req.user.user_id}`,
-    role: req.user.role, 
+  const query = 'SELECT last_login FROM Customer WHERE user_id = ?';
+
+  // Fetch the last_login data from the database
+  db.query(query, [req.user.user_id], (err, results) => {
+    if (err) {
+      console.error('Error fetching last login time:', err);
+      return res.status(500).json({ 
+        success: false, 
+        message: 'Error fetching last login time' 
+      });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'User not found' 
+      });
+    }
+
+    const lastLogin = results[0].last_login;
+
+    // Send the dashboard data including last_login
+    res.json({
+      success: true,
+      message: `Welcome to the dashboard, user ${req.user.user_id}`,
+      role: req.user.role, 
+      last_login: lastLogin, // Include last_login in the response
+    });
   });
 });
+
 
 // Technician Dashboard Endpoint
 app.get('/technician-dashboard', authenticateJWT, (req, res) => {
@@ -260,6 +293,13 @@ app.get('/api/cities', (req, res) => {
 app.get('/api/areas/:city_id', (req, res) => {
   db.query('SELECT zipcode, area FROM Location WHERE city_id = ?', [req.params.city_id], (err, results) => {
     if (err) return res.status(500).send('Error fetching areas.');
+    res.json(results);
+  });
+});
+// Get Services
+app.get('/api/services', (req, res) => {
+  db.query('SELECT service_name FROM Service', (err, results) => {
+    if (err) return res.status(500).send('Error fetching services.');
     res.json(results);
   });
 });
@@ -509,6 +549,68 @@ app.get('/api/bookings', authenticateJWT, (req, res) => {
     res.json(results);  // Send back the list of bookings for the user
   });
 });
+app.post('/create-technician', authenticateJWT,  (req, res) => {
+  const { user_name, password, phone_number, email, experienced_year, location, service_names } = req.body;
+
+  // Check required fields
+  if (!user_name || !password || !email || !experienced_year || !location || !service_names) {
+    return res.status(400).json({ success: false, message: 'All fields are required.' });
+  }
+
+  // Hash the password
+  bcrypt.hash(password, 10, (err, hashedPassword) => {
+    if (err) {
+      console.error('Error hashing password:', err);
+      return res.status(500).json({ success: false, message: 'Internal server error.' });
+    }
+
+    // Insert into User table
+    const userQuery = `
+      INSERT INTO User (user_name, password, phone_number, email, role) 
+      VALUES (?, ?, ?, ?, 'Technician')
+    `;
+
+    db.query(userQuery, [user_name, hashedPassword, phone_number, email], (err, userResult) => {
+      if (err) {
+        console.error('Error inserting into User:', err);
+        return res.status(500).json({ success: false, message: 'Error creating technician user.' });
+      }
+
+      const user_id = userResult.insertId;
+
+      // Insert into Technician table
+      const technicianQuery = `
+        INSERT INTO Technician (user_id, experienced_year, zipcode) 
+        VALUES (?, ?, (SELECT zipcode FROM Location WHERE area = ?))
+      `;
+
+      db.query(technicianQuery, [user_id, experienced_year, location], (err) => {
+        if (err) {
+          console.error('Error inserting into Technician:', err);
+          return res.status(500).json({ success: false, message: 'Error creating technician details.' });
+        }
+
+        // Insert into Offers table for services
+        const serviceQueries = service_names.map((serviceName) => `
+          INSERT INTO Offers (technician_id, service_id) 
+          VALUES (${user_id}, (SELECT service_id FROM Service WHERE service_name = '${serviceName}'))
+        `);
+
+        const allQueries = serviceQueries.join('; ');
+
+        db.query(allQueries, (err) => {
+          if (err) {
+            console.error('Error inserting into Offers:', err);
+            return res.status(500).json({ success: false, message: 'Error adding technician services.' });
+          }
+
+          res.status(201).json({ success: true, message: 'Technician created successfully!' });
+        });
+      });
+    });
+  });
+});
+
 
 
 // Start Server

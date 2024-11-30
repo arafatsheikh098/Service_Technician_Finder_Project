@@ -13,6 +13,8 @@ const getCurrentDate = () => {
 
 const Dashboard = () => {
   const [message, setMessage] = useState('');
+  const [lastLogin, setLastLogin] = useState('');
+
   const [cities, setCities] = useState([]);
   const [areas, setAreas] = useState([]);
   const [selectedCity, setSelectedCity] = useState('');
@@ -50,7 +52,9 @@ const Dashboard = () => {
         .get('http://localhost:8000/dashboard', {
           headers: { Authorization: `Bearer ${token}` },
         })
-        .then((response) => setMessage(response.data.message))
+        .then((response) => {setMessage(response.data.message);
+          setLastLogin(response.data.last_login);
+    })
         .catch(() => setMessage('Access denied. Please log in.'));
 
       axios
@@ -141,6 +145,7 @@ const Dashboard = () => {
         )
         .then((response) => {
           setBookings([...bookings, response.data]);
+          alert("Booking successful!");
           setConfirmationMessage('Booking successful!');  // Show confirmation message
           setTimeout(() => {
             setConfirmationMessage('');  // Hide confirmation message after 3 seconds
@@ -273,6 +278,11 @@ const Dashboard = () => {
           <p><strong>Email:</strong> {customerDetails.email}</p>
         </div>
       )}
+      <div className="last-login">
+     <h2>Last Login</h2>
+    <p>{lastLogin ? new Date(lastLogin).toLocaleString() : 'Loading...'}</p>
+    </div>
+
 
       <h2>Find and Book a Technician</h2>
       <form onSubmit={handleBookingSubmit}>
@@ -379,6 +389,7 @@ const Dashboard = () => {
       {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
       {confirmationMessage && <p style={{ color: 'green' }}>{confirmationMessage}</p>}
     </div>
+    
   );
 };
 
