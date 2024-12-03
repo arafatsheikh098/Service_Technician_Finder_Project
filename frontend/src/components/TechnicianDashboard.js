@@ -23,12 +23,14 @@ const TechnicianDashboard = () => {
     email: '',
   });
   const [updateSuccessMessage, setUpdateSuccessMessage] = useState('');
+  const [bestTechnician, setBestTechnician] = useState(null);
+
   const navigate = useNavigate();
 
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      // Fetch technician details
+      
       axios
         .get('http://localhost:8000/technician-details', {
           headers: { Authorization: `Bearer ${token}` },
@@ -45,7 +47,7 @@ const TechnicianDashboard = () => {
           setErrorMessage('Error fetching technician details.');
         });
 
-      // Fetch pending bookings
+     
       axios
         .get('http://localhost:8000/pending-bookings', {
           headers: { Authorization: `Bearer ${token}` },
@@ -57,7 +59,7 @@ const TechnicianDashboard = () => {
           setErrorMessage('Error fetching pending bookings.');
         });
 
-      // Fetch booking history
+      
       axios
         .get('http://localhost:8000/booking-history', {
           headers: { Authorization: `Bearer ${token}` },
@@ -68,13 +70,25 @@ const TechnicianDashboard = () => {
         .catch(() => {
           setErrorMessage('Error fetching booking history.');
         });
+
+        axios
+            .get('http://localhost:8000/best-technician', {
+                headers: { Authorization: `Bearer ${token}` },
+            })
+            .then((response) => {
+                setBestTechnician(response.data);
+            })
+            .catch(() => {
+                setErrorMessage('Error fetching best technician.');
+            });
+        
     } else {
       navigate('/login');
     }
   }, [navigate]);
 
   const toggleTechnicianDetails = () => {
-    setIsTechnicianDetailsVisible(!isTechnicianDetailsVisible); // Toggle visibility
+    setIsTechnicianDetailsVisible(!isTechnicianDetailsVisible);
   };
 
   const handleLogout = () => {
@@ -102,7 +116,7 @@ const TechnicianDashboard = () => {
     }
   };
 
-  // Function to handle update of technician details
+  
   const handleUpdateInfo = (e) => {
     e.preventDefault();
 
@@ -114,9 +128,9 @@ const TechnicianDashboard = () => {
         })
         .then((response) => {
           setMessage('Profile updated successfully!');
-          setTechnicianDetails(updatedInfo); // Update the displayed details
+          setTechnicianDetails(updatedInfo); 
           setUpdateSuccessMessage('Information updated successfully!');
-          setIsEditing(false); // Hide the form after update
+          setIsEditing(false); 
         })
         .catch(() => {
           setErrorMessage('Error updating profile.');
@@ -124,7 +138,7 @@ const TechnicianDashboard = () => {
     }
   };
 
-  // Function to handle status change
+ 
   const handleStatusChange = (bookingId, newStatus) => {
     const token = localStorage.getItem('token');
     if (!token) return;
@@ -136,7 +150,7 @@ const TechnicianDashboard = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       )
       .then((response) => {
-        // Update the status in the local state after successful API call
+        
         setPendingBookings((prevBookings) =>
           prevBookings.map((booking) =>
             booking.booking_id === bookingId ? { ...booking, status: newStatus } : booking
@@ -162,14 +176,24 @@ const TechnicianDashboard = () => {
         <button onClick={handleLogout}>Logout</button>
       </div>
 
-      {/* Toggle Button for Technician Details */}
       <div className="show-details-button">
         <button onClick={toggleTechnicianDetails}>
           {isTechnicianDetailsVisible ? 'Hide' : 'Show'} Your Details
         </button>
       </div>
-
-      {/* Conditionally Render Technician Details */}
+      <div className="best-technician">
+  <h3>Best Technician of Last Month</h3>
+  {bestTechnician ? (
+    <div>
+      <p><strong>Name:</strong> {bestTechnician.user_name}</p>
+      <p><strong>Experience:</strong> {bestTechnician.experienced_year} years</p>
+      <p><strong>Average Rating:</strong> {bestTechnician.avg_rating}</p>
+      <p><strong>Total Bookings:</strong> {bestTechnician.total_bookings}</p>
+    </div>
+  ) : (
+    <p>No data available.</p>
+  )}
+</div>
       {isTechnicianDetailsVisible && (
         <div className="technician-details">
           <h2>Your Details</h2>
@@ -214,7 +238,8 @@ const TechnicianDashboard = () => {
           )}
         </div>
       )}
-
+      
+     <div className="pending-bookings" >
       <h2>Your Pending Bookings</h2>
       {pendingBookings && pendingBookings.length > 0 ? (
         <ul>
@@ -240,8 +265,10 @@ const TechnicianDashboard = () => {
       ) : (
         <p>No pending bookings at the moment.</p>
       )}
+      </div>
 
-      <h2>Your Booking History</h2>
+      <div className="completed-bookings">
+      <h2>Your Bookings History</h2>
       {bookingHistory && bookingHistory.length > 0 ? (
         <ul>
           {bookingHistory.map((history) => (
@@ -258,6 +285,7 @@ const TechnicianDashboard = () => {
       ) : (
         <p>No booking history available.</p>
       )}
+      </div>
     </div>
   );
 };

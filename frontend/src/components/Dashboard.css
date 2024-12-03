@@ -1,25 +1,25 @@
-/* Top Right Section (Delete Account and Logout buttons) */
+
 .actions {
   position: absolute;
   top: 20px;
   right: 20px;
   display: flex;
-  gap: 10px; /* Space between the buttons */
+  gap: 10px; 
 }
 
 .show-details-button {
   margin-top: 20px;
-  width: 100%; /* Make the container take full width */
+  width: 100%; 
   display: flex;
-  justify-content: flex-start; /* Align button to the left */
+  justify-content: flex-start;
 }
 
 .show-details-button button {
-  width: 200px; /* Adjust width of the button */
+  width: 200px; 
   padding: 10px;
   font-size: 16px;
   cursor: pointer;
-  margin-left: 0; /* Remove any left margin */
+  margin-left: 0; 
 }
 
 .customer-details {
@@ -68,20 +68,20 @@ form button {
   padding: 10px 20px;
   font-size: 16px;
   cursor: pointer;
-  background-color: #007bff; /* Adjust button color */
+  background-color: #007bff;
   color: white;
   border: none;
   border-radius: 4px;
   transition: background-color 0.3s ease;
   white-space: nowrap;
-  margin: 0 auto; /* This will center the button horizontally */
+  margin: 0 auto; 
 }
 
 .actions button {
   padding: 10px 15px;
   font-size: 14px;
   cursor: pointer;
-  background-color: #007bff; /* Adjust button color */
+  background-color: #007bff;
   color: white;
   border: none;
   border-radius: 4px;
@@ -90,7 +90,7 @@ form button {
 }
 
 .actions button:hover {
-  background-color: #0056b3; /* Darker blue on hover */
+  background-color: #0056b3;
 }
 .provide-review-btn {
   padding: 8px 16px;
@@ -108,4 +108,92 @@ form button {
 
 .provide-review-btn:focus {
   outline: none;
+}
+.best-technician {
+  position: absolute;
+  top: 90px;
+  right: 50px;
+  padding: 15px;
+  background-color: #f9f9f9;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.best-technician h3 {
+  margin-bottom: 10px;
+}
+
+.best-technician p {
+  margin: 5px 0;
+}
+
+.pending-bookings,
+.completed-bookings {
+  margin-top: 20px;
+  padding: 15px;
+  border-radius: 8px;
+  /* background-color: #e8f5e9; */
+}
+
+.completed-bookings {
+  /* background-color: #f1f8e9; */
+}
+
+.pending-bookings ul,
+.completed-bookings ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.pending-bookings li,
+.completed-bookings li {
+  background-color: #ffffff;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.pending-bookings li:hover,
+.completed-bookings li:hover {
+   /* background-color: #f1f8e9; */
+}
+
+.pending-bookings select,
+.completed-bookings select {
+  margin-top: 10px;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.pending-bookings select:focus,
+.completed-bookings select:focus {
+  border-color: #4caf50;
+}
+
+.pending-bookings li strong,
+.completed-bookings li strong {
+  font-weight: bold;
+}
+
+.status-pending {
+  color: #f44336;
+  font-weight: bold;
+}
+
+.status-confirmed {
+  color: #ff9800;
+  font-weight: bold;
+}
+
+.status-completed {
+  /* color: #4caf50; */
+  font-weight: bold;
+}
+
+.status-cancelled {
+  color: #9e9e9e;
+  font-weight: bold;
 }

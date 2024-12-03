@@ -24,15 +24,15 @@ const Login = () => {
     }
 
     try {
-      // Declare and assign response here
+      
       const response = await axios.post('http://localhost:8000/login', { email, password });
 
       if (response.data.success) {
-        // Save token and role in localStorage
+        
         localStorage.setItem('token', response.data.token);
-        localStorage.setItem('role', response.data.role); // Store user role
+        localStorage.setItem('role', response.data.role); 
 
-        // Redirect based on role
+        
         if (response.data.role === 'Customer') {
           navigate('/dashboard');
         } else if (response.data.role === 'Technician') {
@@ -86,7 +86,7 @@ const Login = () => {
           </Link>
         </p>
 
-        {/* Forgot Password Link */}
+       
         <p>
           <Link to="/forgot-password" className="forgot-password-link">
             Forgot Password?

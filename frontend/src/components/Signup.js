@@ -5,7 +5,7 @@ import axios from "axios";
 import "react-toastify/dist/ReactToastify.css";
 import styles from "../styles/SignUp.module.css";
 
-// Validation function
+
  const validate = (data) => {
   const errors = {};
 
@@ -36,7 +36,7 @@ const SignUp = () => {
   const [touched, setTouched] = useState({});
   const navigate = useNavigate(); 
 
-  // Update errors whenever the data changes
+  
   useEffect(() => {
     setErrors(validate(data));
   }, [data]);
@@ -52,7 +52,7 @@ const SignUp = () => {
   const submitHandler = async (event) => {
     event.preventDefault();
 
-    // Final validation before submission
+   
     const validationErrors = validate(data);
     setErrors(validationErrors);
 
@@ -63,8 +63,8 @@ const SignUp = () => {
         if (response.data.success) {
           toast.success("Registered successfully!");
           setTimeout(() => {
-            navigate("/login"); // Redirect to login page after 5 seconds
-          }, 5000);
+            navigate("/login"); 
+          }, 3000);
         } else {
           toast.error(response.data.message || "Something went wrong!");
         }

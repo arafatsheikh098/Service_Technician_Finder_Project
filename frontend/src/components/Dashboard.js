@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import './Dashboard.css'; // Import the CSS file
+import './Dashboard.css';
 
 const getCurrentDate = () => {
   const today = new Date();
   const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+  const month = String(today.getMonth() + 1).padStart(2, '0'); 
   const day = String(today.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 };
@@ -14,6 +14,7 @@ const getCurrentDate = () => {
 const Dashboard = () => {
   const [message, setMessage] = useState('');
   const [lastLogin, setLastLogin] = useState('');
+  const [bestTechnician, setBestTechnician] = useState(null);
 
   const [cities, setCities] = useState([]);
   const [areas, setAreas] = useState([]);
@@ -39,9 +40,9 @@ const Dashboard = () => {
     phone_number: '',
     email: '',
   });
-  const [isUpdatingInfo, setIsUpdatingInfo] = useState(false); // For toggling update form
-  const [isCustomerDetailsVisible, setIsCustomerDetailsVisible] = useState(false); // For toggling customer details visibility
-  const [confirmationMessage, setConfirmationMessage] = useState(''); // Confirmation message state
+  const [isUpdatingInfo, setIsUpdatingInfo] = useState(false); 
+  const [isCustomerDetailsVisible, setIsCustomerDetailsVisible] = useState(false);
+  const [confirmationMessage, setConfirmationMessage] = useState(''); 
 
   const navigate = useNavigate();
 
@@ -92,6 +93,16 @@ const Dashboard = () => {
       navigate('/login');
     }
   }, [navigate]);
+  useEffect(() => {
+    if (selectedArea) {
+    
+      axios
+        .get(`http://localhost:8000/api/best-technician/${selectedArea}`)
+        
+        .then((response) => setBestTechnician(response.data))
+        .catch((error) => console.error('Error fetching best technician:', error));
+    }
+  }, [selectedArea]);
   
   useEffect(() => {
     if (selectedCity) {
@@ -146,9 +157,9 @@ const Dashboard = () => {
         .then((response) => {
           setBookings([...bookings, response.data]);
           alert("Booking successful!");
-          setConfirmationMessage('Booking successful!');  // Show confirmation message
+          setConfirmationMessage('Booking successful!'); 
           setTimeout(() => {
-            setConfirmationMessage('');  // Hide confirmation message after 3 seconds
+            setConfirmationMessage();  
           }, 3000);
         })
         .catch((error) => {
@@ -278,6 +289,20 @@ const Dashboard = () => {
           <p><strong>Email:</strong> {customerDetails.email}</p>
         </div>
       )}
+      <div className="best-technician">
+  <h3>Best Technician of Last Month</h3>
+  {bestTechnician ? (
+    <div>
+      <p><strong>Name:</strong> {bestTechnician.user_name}</p>
+      <p><strong>Experience:</strong> {bestTechnician.experienced_year} years</p>
+      <p><strong>Average Rating:</strong> {bestTechnician.avg_rating}</p>
+      <p><strong>Total Bookings:</strong> {bestTechnician.total_bookings}</p>
+    </div>
+  ) : (
+    <p>Please select your area first.</p>
+  )}
+</div>
+
       <div className="last-login">
      <h2>Last Login</h2>
     <p>{lastLogin ? new Date(lastLogin).toLocaleString() : 'Loading...'}</p>

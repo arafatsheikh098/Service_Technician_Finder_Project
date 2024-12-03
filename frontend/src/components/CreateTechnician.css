@@ -1,25 +1,25 @@
-/* Logout Button */
-/* Ensure Logout Button is small and positioned at the top-right */
+
+
 .logout-button {
-    position: fixed; /* Fixed positioning on the screen */
+    position: fixed;
     top: 10px;
     right: 10px;
-    padding: 5px 10px; /* Small padding */
+    padding: 5px 10px; 
     background-color: #333;
     color: white;
     border: none;
     cursor: pointer;
-    font-size: 20px; /* Smaller font */
-    border-radius: 5px; /* Optional: Rounded corners */
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Optional: subtle shadow */
-    width: auto; /* Prevents full-width behavior */
-    height: auto; /* Prevents full-height behavior */
-    display: inline-block; /* Ensures it doesn't take full width */
-    white-space: nowrap; /* Prevents text from wrapping */
+    font-size: 20px; 
+    border-radius: 5px; 
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); 
+    width: auto; 
+    height: auto;
+    display: inline-block; 
+    white-space: nowrap; 
   }
   
   
-  /* Form Container */
+ 
   .create-technician-form {
     display: flex;
     flex-direction: column;
@@ -32,7 +32,7 @@
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   }
   
-  /* Input Fields */
+ 
   .create-technician-form input,
   .create-technician-form select {
     width: 100%;
@@ -41,7 +41,7 @@
     border-radius: 4px;
   }
   
-  /* Buttons */
+
   .create-technician-form button {
     background-color: #4caf50;
     color: white;
@@ -55,13 +55,13 @@
     text-align: center;
   }
   
-  /* Title */
+
   .create-technician-form h2 {
     text-align: center;
     margin-bottom: 20px;
   }
   
-  /* Form Fields */
+  
   .create-technician-form .form-field {
     width: 100%;
     margin-bottom: 10px;

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-// import './UpdateProfile.css'; // Import the CSS file
+
 
 const UpdateProfile = () => {
   const [customerDetails, setCustomerDetails] = useState({

@@ -4,7 +4,7 @@ import './Navbar.css';
 import logo from '../assets/logo.png';
 function Navbar() {
   const token = localStorage.getItem('token');
-  const role = localStorage.getItem('role');  // User role stored in localStorage
+  const role = localStorage.getItem('role'); 
 
   return (
     <nav className="navbar">

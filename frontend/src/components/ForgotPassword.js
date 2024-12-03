@@ -26,7 +26,7 @@ const ForgotPassword = () => {
         setNewPassword('');
         setError('');
 
-        // Redirect to login page after 5 seconds
+        
         setTimeout(() => {
           navigate('/login'); 
         }, 2000);

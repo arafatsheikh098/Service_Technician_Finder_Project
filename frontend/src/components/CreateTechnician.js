@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import './CreateTechnician.css'; // Import the CSS file
+import './CreateTechnician.css';
 
 const CreateTechnician = () => {
   const [services, setServices] = useState([]);
@@ -82,7 +82,7 @@ const CreateTechnician = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Validate phone number
+ 
     if (!validatePhoneNumber(formData.phone_number)) {
       setErrors({ ...errors, phone_number: 'Invalid phone number. Must be 11 digits.' });
       return;
@@ -90,7 +90,7 @@ const CreateTechnician = () => {
       setErrors({ ...errors, phone_number: '' });
     }
 
-    // Validate email
+   
     if (!validateEmail(formData.email)) {
       setErrors({ ...errors, email: 'Invalid email address.' });
       return;
