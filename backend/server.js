@@ -3,6 +3,8 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const multer = require('multer');
+const path = require('path');
 const mysql = require('mysql2');
 
 const app = express();
@@ -19,6 +21,22 @@ const db = mysql.createConnection({
 
 // JWT Secret Key
 const SECRET_KEY = 'your_secret_key';
+
+// Set up multer storage for profile picture
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/'); // Directory to store the uploaded files
+  },
+  filename: (req, file, cb) => {
+    const fileExtension = path.extname(file.originalname); // Get the file extension
+    const fileName = `${Date.now()}${fileExtension}`; // Generate a unique file name
+    cb(null, fileName);
+  },
+});
+const upload = multer({ storage: storage });
+app.use(express.json());
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 
 //  Signup
 app.post('/signup', (req, res) => {
@@ -195,7 +213,8 @@ app.get('/technician-details', authenticateJWT, (req, res) => {
       User.user_name, 
       User.phone_number, 
       User.email, 
-      Technician.experienced_year, 
+      Technician.experienced_year,
+      Technician.profile_picture, 
       (SELECT AVG(Booking.rating) FROM Booking WHERE technician_id = ?) AS rating
     FROM User
     JOIN Technician ON User.user_id = Technician.user_id
@@ -231,7 +250,7 @@ app.get('/pending-bookings', authenticateJWT, (req, res) => {
       User.phone_number AS customer_phone_number
     FROM Booking
     JOIN User ON Booking.customer_id = User.user_id
-    WHERE Booking.technician_id = ? AND Booking.status = 'Pending'
+    WHERE Booking.technician_id = ? AND Booking.status  in( 'Confirmed' , 'Pending')
   `;
 
   db.query(query, [technicianId], (err, results) => {
@@ -255,7 +274,7 @@ app.get('/booking-history', authenticateJWT, (req, res) => {
       User.phone_number AS customer_phone_number
     FROM Booking
     JOIN User ON Booking.customer_id = User.user_id
-    WHERE Booking.technician_id = ? AND Booking.status != 'Pending'
+    WHERE Booking.technician_id = ? AND Booking.status not in ( 'Pending' , 'Confirmed')
   `;
 
   db.query(query, [technicianId], (err, results) => {
@@ -398,7 +417,7 @@ app.get('/best-technician', authenticateJWT, (req, res) => {
 // best technician 
 app.get('/api/best-technician/:zipcode', (req, res) => {
   const zipcode = req.params.zipcode;
-  console.log(zipcode);
+  // console.log(zipcode);
   const query = `
     SELECT t.user_id, t.experienced_year, u.user_name, AVG(b.rating) AS avg_rating, COUNT(b.booking_id) AS total_bookings
     FROM Technician t
@@ -416,7 +435,7 @@ app.get('/api/best-technician/:zipcode', (req, res) => {
       res.status(500).json({ error: 'Error fetching best technician.' });
     } else {
       res.json(results[0]);
-      console.log(results[0]);
+      // console.log(results[0]);
     }
   });
 });
@@ -473,11 +492,12 @@ app.put('/api/customer-details', authenticateJWT, (req, res) => {
   }
 });
 
-// technician details
 app.get('/api/technician-details/:technician_id', (req, res) => {
   const { technician_id } = req.params;
+
   const sql = `
     SELECT 
+      Technician.profile_picture,
       Technician.experienced_year AS experience_years, 
       AVG(Booking.rating) AS rating,
       COUNT(Booking.review) AS reviews_count,
@@ -485,9 +505,21 @@ app.get('/api/technician-details/:technician_id', (req, res) => {
     FROM Technician
     LEFT JOIN Booking ON Technician.user_id = Booking.technician_id
     WHERE Technician.user_id = ?`;
+
   db.query(sql, [technician_id], (err, results) => {
-    if (err) return res.status(500).send(err);
-    res.json(results[0]);
+    if (err) {
+      console.error("Error fetching technician details:", err);
+      return res.status(500).send(err);
+    }
+
+    // // Add a default image if `profile_picture` is NULL
+     const technicianDetails = results[0];
+    // if (technicianDetails) {
+    //   technicianDetails.profile_picture = technicianDetails.profile_picture ;
+    // }
+    console.log(technicianDetails);
+    res.json(technicianDetails);
+ 
   });
 });
 
@@ -640,27 +672,29 @@ app.get('/api/bookings', authenticateJWT, (req, res) => {
 });
 
 // admin create technician 
-app.post('/create-technician', authenticateJWT,  (req, res) => {
+// POST route to create a technician (with profile picture)
+app.post('/create-technician', authenticateJWT, upload.single('profile_picture'), (req, res) => {
   const { user_name, password, phone_number, email, experienced_year, location, service_names } = req.body;
-
-  
+  const profile_picture = req.file ? req.file.filename : null; // Get the file name if uploaded
+console.log(profile_picture);
+  // Validate required fields
   if (!user_name || !password || !email || !experienced_year || !location || !service_names) {
     return res.status(400).json({ success: false, message: 'All fields are required.' });
   }
 
-  
+  // Hash password
   bcrypt.hash(password, 10, (err, hashedPassword) => {
     if (err) {
       console.error('Error hashing password:', err);
       return res.status(500).json({ success: false, message: 'Internal server error.' });
     }
 
-   
+    // Insert the user into the User table
     const userQuery = `
       INSERT INTO User (user_name, password, phone_number, email, role) 
       VALUES (?, ?, ?, ?, 'Technician')
     `;
-
+    
     db.query(userQuery, [user_name, hashedPassword, phone_number, email], (err, userResult) => {
       if (err) {
         console.error('Error inserting into User:', err);
@@ -669,19 +703,19 @@ app.post('/create-technician', authenticateJWT,  (req, res) => {
 
       const user_id = userResult.insertId;
 
-    
+      // Insert the technician details into the Technician table
       const technicianQuery = `
-        INSERT INTO Technician (user_id, experienced_year, zipcode) 
-        VALUES (?, ?, (SELECT zipcode FROM Location WHERE area = ?))
+        INSERT INTO Technician (user_id, experienced_year, profile_picture, zipcode) 
+        VALUES (?, ?, ?, (SELECT zipcode FROM Location WHERE area = ?))
       `;
 
-      db.query(technicianQuery, [user_id, experienced_year, location], (err) => {
+      db.query(technicianQuery, [user_id, experienced_year, profile_picture, location], (err) => {
         if (err) {
           console.error('Error inserting into Technician:', err);
           return res.status(500).json({ success: false, message: 'Error creating technician details.' });
         }
 
-    
+        // Insert the selected services into the Offers table
         const serviceQueries = service_names.map((serviceName) => `
           INSERT INTO Offers (technician_id, service_id) 
           VALUES (${user_id}, (SELECT service_id FROM Service WHERE service_name = '${serviceName}'))
@@ -701,7 +735,6 @@ app.post('/create-technician', authenticateJWT,  (req, res) => {
     });
   });
 });
-
 
 
 //server

@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import './Dashboard.css';
+import profile from './download.png' ;
+
 
 const TechnicianDashboard = () => {
   const [message, setMessage] = useState('');
@@ -11,6 +13,7 @@ const TechnicianDashboard = () => {
     email: '',
     experienced_year: 0,
     rating: 0,
+    profile_picture: '',
   });
   const [pendingBookings, setPendingBookings] = useState([]); 
   const [bookingHistory, setBookingHistory] = useState([]); 
@@ -26,6 +29,7 @@ const TechnicianDashboard = () => {
   const [bestTechnician, setBestTechnician] = useState(null);
 
   const navigate = useNavigate();
+  
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -163,11 +167,28 @@ const TechnicianDashboard = () => {
         alert('Error updating status');
       });
   };
-
+// console.log(technicianDetails.profile_picture);
   return (
     <div className="dashboard">
       <h1>Technician Dashboard</h1>
       <p>{message}</p>
+      <div className="dash">
+ 
+  {technicianDetails.profile_picture ? (
+    <img
+    src={`http://localhost:8000/uploads/${technicianDetails.profile_picture}`}
+    alt="Profile"
+    style={{ width: '100px', height: '100px', borderRadius: '50%' }}
+      className="profile-picture"
+    />
+  ) : (
+    <img
+      src={profile} 
+      alt="Default Profile"
+      className="profile-picture"
+    />
+  )}
+</div>
 
       {errorMessage && <p className="error-message">{errorMessage}</p>}
 

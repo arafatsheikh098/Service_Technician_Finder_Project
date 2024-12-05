@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Profiler } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import './Dashboard.css';
-
+import dp from './download.png'
 const getCurrentDate = () => {
   const today = new Date();
   const year = today.getFullYear();
@@ -25,10 +25,12 @@ const Dashboard = () => {
   const [selectedBookingId, setSelectedBookingId] = useState(null);
   const [selectedTechnician, setSelectedTechnician] = useState('');
   const [technicianDetails, setTechnicianDetails] = useState({
+    profile_picture: '',
     experience_years: 0,
     rating: 0,
     reviews_count: 0,
     booking_count: 0,
+ 
   });
   const [bookingDate, setBookingDate] = useState(getCurrentDate());
   const [status, setStatus] = useState('Pending');
@@ -135,6 +137,7 @@ const Dashboard = () => {
         .catch((error) => {
           console.error('Error fetching technician details:', error);
           setTechnicianDetails({
+            profile_picture: '',
             experience_years: 0,
             rating: 0,
             reviews_count: 0,
@@ -178,12 +181,12 @@ const Dashboard = () => {
   const handleReviewSubmit = (booking_id) => {
     const token = localStorage.getItem('token');
     if (rating && review) {
-      console.log('Submitting Review:');
-      console.log('Booking ID:', booking_id);
-      console.log('Token:', token);
-      console.log(status);
-      console.log('Rating:', rating);
-      console.log('Review:', review);
+      // console.log('Submitting Review:');
+      // console.log('Booking ID:', booking_id);
+      // console.log('Token:', token);
+      // console.log(status);
+      // console.log('Rating:', rating);
+      // console.log('Review:', review);
       axios
         .put(
           `http://localhost:8000/api/bookings/${booking_id}`,
@@ -340,6 +343,19 @@ const Dashboard = () => {
 
         <div>
           <h4>Technician Details</h4>
+          {technicianDetails.profile_picture ? (
+    <img
+      src={`http://localhost:8000/uploads/${technicianDetails.profile_picture}`}
+      alt="Technician Profile"
+      style={{ width: '100px', height: '100px', borderRadius: '50%' }}
+    />
+  ) : (
+    <img
+      src={dp} // Path to your default image
+      alt="Default Profile"
+      style={{ width: '100px', height: '100px', borderRadius: '50%' }}
+    />
+  )}
           <p><strong>Experience:</strong> {technicianDetails.experience_years} years</p>
           <p><strong>Rating:</strong> {technicianDetails.rating}</p>
           <p><strong>Reviews Count:</strong> {technicianDetails.reviews_count}</p>

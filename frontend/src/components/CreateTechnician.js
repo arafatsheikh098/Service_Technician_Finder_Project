@@ -16,11 +16,9 @@ const CreateTechnician = () => {
     experienced_year: '',
     location: '',
     service_names: [],
+    profile_picture: null,
   });
-  const [errors, setErrors] = useState({
-    phone_number: '',
-    email: '',
-  });
+  const [errors, setErrors] = useState({});
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -33,9 +31,7 @@ const CreateTechnician = () => {
   useEffect(() => {
     axios
       .get('http://localhost:8000/api/services')
-      .then((response) => {
-        setServices(response.data);
-      })
+      .then((response) => setServices(response.data))
       .catch((error) => console.error('Error fetching services:', error));
   }, []);
 
@@ -51,64 +47,72 @@ const CreateTechnician = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setFormData((prevState) => ({
+      ...prevState,
+      [name]: value,
+    }));
   };
 
   const handleServiceChange = (e) => {
     const selectedOptions = Array.from(e.target.selectedOptions);
     const selectedServiceNames = selectedOptions.map((option) => option.value);
-
     setFormData((prevState) => ({
       ...prevState,
       service_names: selectedServiceNames,
     }));
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    navigate('/login');
+  const handleProfilePictureChange = (e) => {
+    const file = e.target.files[0];
+    setFormData((prevState) => ({
+      ...prevState,
+      profile_picture: file,
+    }));
   };
 
-  const validatePhoneNumber = (phone) => {
-    const phoneRegex = /^[0-9]{11}$/; 
-    return phoneRegex.test(phone);
-  };
-
-  const validateEmail = (email) => {
+  const validateInputs = () => {
+    const errors = {};
+    const phoneRegex = /^[0-9]{11}$/;
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    return emailRegex.test(email);
+
+    if (!phoneRegex.test(formData.phone_number)) {
+      errors.phone_number = 'Invalid phone number. Must be 11 digits.';
+    }
+
+    if (!emailRegex.test(formData.email)) {
+      errors.email = 'Invalid email address.';
+    }
+
+    setErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
- 
-    if (!validatePhoneNumber(formData.phone_number)) {
-      setErrors({ ...errors, phone_number: 'Invalid phone number. Must be 11 digits.' });
+    if (!validateInputs()) {
       return;
-    } else {
-      setErrors({ ...errors, phone_number: '' });
     }
 
-   
-    if (!validateEmail(formData.email)) {
-      setErrors({ ...errors, email: 'Invalid email address.' });
-      return;
-    } else {
-      setErrors({ ...errors, email: '' });
-    }
-
-    console.log('Form Data:', formData);
+    const formDataToSend = new FormData();
+    Object.keys(formData).forEach((key) => {
+      if (key === 'service_names') {
+        formData[key].forEach((service) =>
+          formDataToSend.append('service_names[]', service)
+        );
+      } else {
+        formDataToSend.append(key, formData[key]);
+      }
+    });
 
     axios
-      .post('http://localhost:8000/create-technician', formData, {
+      .post('http://localhost:8000/create-technician', formDataToSend, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json',
+          'Content-Type': 'multipart/form-data',
         },
       })
       .then((response) => {
-        console.log('Technician created successfully:', response.data);
         alert('Technician created successfully!');
         setFormData({
           user_name: '',
@@ -118,6 +122,7 @@ const CreateTechnician = () => {
           experienced_year: '',
           location: '',
           service_names: [],
+          profile_picture: null,
         });
       })
       .catch((error) => {
@@ -128,7 +133,7 @@ const CreateTechnician = () => {
 
   return (
     <div>
-      <button className="logout-button" onClick={handleLogout}>
+      <button className="logout-button" onClick={() => navigate('/login')}>
         Logout
       </button>
 
@@ -225,9 +230,9 @@ const CreateTechnician = () => {
           <label>Services:</label>
           <select
             name="service_names"
+            multiple
             value={formData.service_names}
             onChange={handleServiceChange}
-            multiple
             required
           >
             {services.map((service) => (
@@ -236,6 +241,16 @@ const CreateTechnician = () => {
               </option>
             ))}
           </select>
+        </div>
+
+        <div className="form-field">
+          <label>Profile Picture:</label>
+          <input
+            type="file"
+            name="profile_picture"
+            accept="image/*"
+            onChange={handleProfilePictureChange}
+          />
         </div>
 
         <button type="submit">Create Technician</button>
