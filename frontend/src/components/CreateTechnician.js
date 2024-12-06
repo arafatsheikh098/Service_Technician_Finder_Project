@@ -19,6 +19,7 @@ const CreateTechnician = () => {
     profile_picture: null,
   });
   const [errors, setErrors] = useState({});
+  const [technicians, setTechnicians] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -34,6 +35,22 @@ const CreateTechnician = () => {
       .then((response) => setServices(response.data))
       .catch((error) => console.error('Error fetching services:', error));
   }, []);
+  useEffect(() => {
+    axios
+      .get('http://localhost:8000/api/technicians', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      })
+      .then((response) => {
+        setTechnicians(response.data);
+        console.log(response.data);
+      })
+      .catch((error) => {
+        console.error('Error fetching technicians:', error);
+      });
+  }, []);
+  
 
   const handleCityChange = (e) => {
     const cityId = e.target.value;
@@ -130,13 +147,33 @@ const CreateTechnician = () => {
         alert('Error creating technician. Please try again.');
       });
   };
-
+  
+  const handleDeleteTechnician = (technicianId) => {
+    axios
+      .delete(`http://localhost:8000/api/technicians/${technicianId}`, {
+        headers: {
+          
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      })
+      .then(() => {
+        
+        setTechnicians((prevTechnicians) =>
+          prevTechnicians.filter((technician) => technician.id !== technicianId)
+        );
+        alert('Technician deleted successfully!');
+      })
+      .catch((error) => {
+        console.error('Error deleting technician:', error);
+        alert('Error deleting technician. Please try again.');
+      });
+  };
   return (
     <div>
       <button className="logout-button" onClick={() => navigate('/login')}>
         Logout
       </button>
-
+      <h2 className='Admin-dashbaord'>Admin Dashboard</h2>
       <h2 className="create-technician-form-title">Create Technician</h2>
 
       <form onSubmit={handleSubmit} className="create-technician-form">
@@ -255,7 +292,38 @@ const CreateTechnician = () => {
 
         <button type="submit">Create Technician</button>
       </form>
-    </div>
+
+     <h2 className="technician-list-title">Technician List</h2>
+     <table className="technician-list">
+       <thead>
+         <tr>
+           <th>Name</th>
+           <th>Email</th>
+           <th>Average Rating</th>
+           <th>Total Bookings</th>
+           <th>Actions</th>
+         </tr>
+       </thead>
+       <tbody>
+         {technicians.map((technician) => (
+           <tr key={technician.technician_id}>
+             <td>{technician.user_name}</td>
+             <td>{technician.email}</td>
+             <td>{technician.average_rating}</td>
+             <td>{technician.total_bookings}</td>
+             <td>
+               <button
+                 onClick={() => handleDeleteTechnician(technician.technician_id)}
+                 className="delete-button"
+               >
+                 Delete
+               </button>
+             </td>
+           </tr>
+         ))}
+       </tbody>
+     </table>
+   </div>
   );
 };
 

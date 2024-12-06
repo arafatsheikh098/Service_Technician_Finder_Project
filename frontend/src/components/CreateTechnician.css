@@ -2,7 +2,7 @@
 
 .logout-button {
     position: fixed;
-    top: 10px;
+    top: 20px;
     right: 10px;
     padding: 5px 10px; 
     background-color: #333;
@@ -18,7 +18,27 @@
     white-space: nowrap; 
   }
   
-  
+  /* Admin dashboard title */
+.Admin-dashbaord {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  /* Initial position off-screen to the left */
+  position: relative;
+  left: -100%;
+  animation: moveRight 3s ease-out forwards;
+}
+
+/* Animation to move from left to right */
+@keyframes moveRight {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 0;
+  }
+}
+
  
   .create-technician-form {
     display: flex;
@@ -77,3 +97,70 @@
     width: 100%;
   }
   
+  /* Style for the technician list title */
+.technician-list-title {
+  font-size: 2rem;
+  margin: 20px 0;
+  text-align: center;
+  color: #333;
+}
+
+/* Table container */
+.technician-list {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px auto;
+}
+
+/* Table header */
+.technician-list th {
+  padding: 12px 15px;
+  background-color: #f4f4f4;
+  text-align: left;
+  font-weight: bold;
+  border-bottom: 2px solid #ddd;
+}
+
+/* Table cells */
+.technician-list td {
+  padding: 10px 15px;
+  border-bottom: 1px solid #ddd;
+  text-align: left;
+}
+
+/* Hover effect for rows */
+.technician-list tr:hover {
+  background-color: #f1f1f1;
+}
+
+/* Action buttons (Delete button) */
+.delete-button {
+  padding: 5px 10px;
+  background-color: red;
+  color: white;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 0.9rem;
+  transition: background-color 0.3s ease;
+}
+
+.delete-button:hover {
+  background-color: darkred;
+}
+
+/* Style for the logout button */
+.logout-button {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  margin: 20px 0;
+  cursor: pointer;
+}
+
+.logout-button:hover {
+  background-color: #0056b3;
+}

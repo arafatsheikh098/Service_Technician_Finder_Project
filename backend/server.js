@@ -735,6 +735,53 @@ console.log(profile_picture);
     });
   });
 });
+app.get('/api/technicians', (req, res) => {
+  const query = `
+   SELECT
+        u.user_name,
+        u.email,
+        t.user_id AS technician_id,
+        AVG(b.rating) AS average_rating,
+        COUNT(b.booking_id) AS total_bookings
+      FROM User u
+      JOIN Technician t ON u.user_id = t.user_id
+      LEFT JOIN Booking b ON t.user_id = b.technician_id
+      WHERE u.role = 'Technician'
+      GROUP BY t.user_id, u.user_name, u.email
+      ORDER BY u.user_name;
+  `;
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: 'Error fetching technicians' });
+    }
+   
+    res.json(results);
+    
+  });
+});
+// DELETE /api/technicians/:id - Delete technician by ID
+app.delete('/api/technicians/:technicianId', (req, res) => {
+  const technicianId = req.params.technicianId;
+  console.log(technicianId);
+  // SQL query to delete technician from the database
+  const deleteTechnicianQuery = `
+    DELETE FROM user WHERE user_id = ?;
+  `;
+
+  db.query(deleteTechnicianQuery, [technicianId], (err, result) => {
+    if (err) {
+      console.error('Error deleting technician:', err);
+      return res.status(500).send('Error deleting technician');
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).send('Technician not found');
+    }
+
+    res.status(200).send('Technician deleted successfully');
+  });
+});
 
 
 //server
