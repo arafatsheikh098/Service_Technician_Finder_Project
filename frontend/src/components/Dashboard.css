@@ -1,7 +1,18 @@
 
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  /* align-items: center; */
+  /* padding: 280px; Adjusted padding to provide spacing around */
+  background: linear-gradient(to bottom right, #7adbc477, #5c3f3fe0); /* Gradient background */
+  min-height: 100vh;
+  /* color: white; */
+}
+
 .actions {
   position: absolute;
-  top: 90px;
+  top: 85px;
   right: 20px;
   display: flex;
   gap: 10px; 
@@ -93,7 +104,7 @@ form button {
   background-color: #0056b3;
 }
 .provide-review-btn {
-  padding: 8px 16px;
+  padding: 8px 9px;
   background-color: #4CAF50;
   color: white;
   border: none;
@@ -111,7 +122,7 @@ form button {
 }
 .best-technician {
   position: absolute;
-  top: 150px;
+  top: 155px;
   right: 50px;
   padding: 15px;
   background-color: #f9f9f9;
