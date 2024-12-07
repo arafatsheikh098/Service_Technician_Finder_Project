@@ -4,7 +4,16 @@
     flex-direction: column;
     height: 100vh;
   }
+  .home-container{
+    
+      min-height: 100vh;
+      width: 100%;
+      background-image: linear-gradient(rgba(4, 9, 30, 0.7), rgba(4, 9, 30, 0.7)), url(home.png);
+      background-position: center;
+      background-size: cover;
+      position: relative;
   
+  }
   .navbar {
     display: flex;
     justify-content: space-between;
@@ -44,23 +53,24 @@
   .navbar .nav-links li:hover {
     text-decoration: underline;
   }
-  
+ 
   .main-content {
     text-align: center;
     margin-top: 50px;
     display: flex;
     flex-direction: column;
     align-items: center;
+
   }
   
   .main-content h1 {
     font-size: 2.5rem;
-    color: #333;
+    color: #12c654;
   }
   
   .main-content p {
     font-size: 1.2rem;
-    color: #666;
+    color: #befe00bb;
     margin-top: 20px;
   }
   
