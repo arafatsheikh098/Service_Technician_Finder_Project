@@ -86,6 +86,13 @@ const CreateTechnician = () => {
       profile_picture: file,
     }));
   };
+  const handleLogout = () => {
+    // Clear the token and role from localStorage
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
+    // Redirect to the login page
+    navigate('/login');
+  };
 
   const validateInputs = () => {
     const errors = {};
@@ -170,9 +177,8 @@ const CreateTechnician = () => {
   };
   return (
     <div>
-      <button className="logout-button" onClick={() => navigate('/login')}>
-        Logout
-      </button>
+      <button onClick={handleLogout} className="logout-button">Logout</button>
+      
       <h2 className='Admin-dashbaord'>Admin Dashboard</h2>
       <h2 className="create-technician-form-title">Create Technician</h2>
 

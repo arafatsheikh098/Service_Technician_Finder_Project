@@ -37,7 +37,7 @@ const Home = () => {
   return (
     <div className="home-container">
      
-      <nav className="navbar">
+      {/* <nav className="navbar">
         <div className="logo" onClick={() => handleNavigate('/home')}>
           <img src={logo} alt="Service Technician Finder Logo" />
           <span>Service Technician Finder</span>
@@ -49,7 +49,7 @@ const Home = () => {
           <li onClick={() => handleNavigate('/login')}>Log In</li>
           <li onClick={() => handleNavigate('/About')}>About</li>
         </ul>
-      </nav>
+      </nav> */}
 
     
       <div className="main-content">
