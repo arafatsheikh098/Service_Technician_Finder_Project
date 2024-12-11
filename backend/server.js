@@ -18,6 +18,13 @@ const db = mysql.createConnection({
   password: '***REMOVED***', 
   database: 'ServiceTechnicianFinder',
 });
+db.connect((err) => {
+  if (err) {
+    console.error('Error connecting to the database:', err.message);
+  } else {
+    console.log('Connected to the MySQL database.');
+  }
+});
 
 // JWT Secret Key
 const SECRET_KEY = 'your_secret_key';
@@ -357,6 +364,7 @@ app.get('/api/bookings', authenticateJWT, (req, res) => {
     res.json(results);
   });
 });
+
 //  update booking status and review
 app.put('/api/bookings/:bookingId', authenticateJWT, (req, res) => {
   const { bookingId } = req.params;

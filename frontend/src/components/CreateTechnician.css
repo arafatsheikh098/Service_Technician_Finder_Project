@@ -17,7 +17,22 @@
     display: inline-block; 
     white-space: nowrap; 
   }
-  
+  .create-technician-form-title{
+    justify-content: center;
+    align-items: center; 
+    text-align: center;
+    
+  }
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  /* align-items: center; */
+  /* padding: 280px; Adjusted padding to provide spacing around */
+  background: linear-gradient(to bottom right, #7adbc477, #5c3f3fe0); /* Gradient background */
+  min-height: 100vh;
+  /* color: white; */
+}
   /* Admin dashboard title */
 .Admin-dashbaord {
   font-size: 24px;

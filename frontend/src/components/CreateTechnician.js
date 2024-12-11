@@ -176,7 +176,7 @@ const CreateTechnician = () => {
       });
   };
   return (
-    <div>
+    <div className='dashboard'>
       <button onClick={handleLogout} className="logout-button">Logout</button>
       
       <h2 className='Admin-dashbaord'>Admin Dashboard</h2>
