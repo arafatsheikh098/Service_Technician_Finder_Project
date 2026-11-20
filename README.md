@@ -13,6 +13,7 @@ the technician live on a map, chat, pay and leave a review.
 ![Tests](https://img.shields.io/badge/tests-67%20passing-brightgreen)
 ![Node](https://img.shields.io/badge/Node.js-22-339933)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17%20%2B%20PostGIS-336791)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 <img src="docs/screenshots/visitor/01-home.png" alt="TechFinder home page" width="100%" />
 
@@ -38,6 +39,7 @@ the technician live on a map, chat, pay and leave a review.
 - [Deploying to production](#deploying-to-production)
 - [Project structure](#project-structure)
 - [Roadmap](#roadmap)
+- [License](#license)
 
 ---
 
@@ -358,6 +360,10 @@ docker-compose.prod.yml   Hardened production stack
 - [ ] Playwright end-to-end tests in CI
 - [ ] Technician payouts and a platform commission ledger
 - [ ] Installable PWA with push notifications for technicians
+
+## License
+
+[MIT](LICENSE) © arafatsheikh098
 
 ---
 

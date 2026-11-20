@@ -1,6 +1,7 @@
 {
   "name": "@techfinder/web",
   "version": "2.0.0",
+  "license": "MIT",
   "private": true,
   "type": "module",
   "scripts": {

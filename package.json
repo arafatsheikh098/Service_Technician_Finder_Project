@@ -24,5 +24,6 @@
     "infra:up": "docker compose up -d db redis mailpit",
     "infra:down": "docker compose down"
   },
-  "devDependencies": {}
+  "devDependencies": {},
+  "license": "MIT"
 }
