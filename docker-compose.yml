@@ -1,0 +1,89 @@
+# LOCAL DEVELOPMENT / DEMO stack. Not for production: see docker-compose.prod.yml.
+#   docker compose up -d db redis mailpit   -> just the infrastructure (run api/web with npm)
+#   docker compose up --build               -> everything, at http://localhost:8080
+# Ports are bound to 127.0.0.1 so the dev database is never reachable from your network.
+name: techfinder
+
+services:
+  db:
+    # Multi-arch PostGIS build (the official postgis/postgis image is amd64-only,
+    # which is slow under emulation on Apple Silicon).
+    image: imresamu/postgis:17-3.5
+    environment:
+      POSTGRES_USER: techfinder
+      POSTGRES_PASSWORD: techfinder
+      POSTGRES_DB: techfinder
+    ports: ['127.0.0.1:5432:5432']
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./infra/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U techfinder -d techfinder']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7.4-alpine
+    command: ['redis-server', '--appendonly', 'yes']
+    ports: ['127.0.0.1:6379:6379']
+    volumes: [redisdata:/data]
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # Catches every outgoing email. Inbox UI: http://localhost:8025
+  mailpit:
+    image: axllent/mailpit:v1.21
+    ports: ['127.0.0.1:1025:1025', '127.0.0.1:8025:8025']
+
+  api:
+    build: { context: ., dockerfile: apps/api/Dockerfile }
+    environment: &api-env
+      NODE_ENV: production
+      DATABASE_URL: postgres://techfinder:techfinder@db:5432/techfinder
+      REDIS_URL: redis://redis:6379
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-compose-demo-secret-change-me-0123456789abcdef}
+      PAYMENT_WEBHOOK_SECRET: ${PAYMENT_WEBHOOK_SECRET:-compose-demo-webhook-secret-change-me}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      APP_URL: http://localhost:8080
+      CORS_ORIGINS: http://localhost:8080
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
+      TRUST_PROXY: 1
+      MOCKPAY_ENABLED: 'true' # sandbox payments for the local demo
+      API_DOCS_ENABLED: 'true'
+      UPLOAD_DIR: /app/uploads
+      RATE_LIMIT_DISABLED: ${RATE_LIMIT_DISABLED:-false}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    volumes: [uploads:/app/uploads]
+    depends_on:
+      db: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://localhost:8000/health/ready']
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  worker:
+    build: { context: ., dockerfile: apps/api/Dockerfile }
+    command: ['node', 'dist/worker.js']
+    environment: *api-env
+    healthcheck:
+      disable: true # no HTTP server in the worker
+    depends_on:
+      api: { condition: service_healthy }
+
+  web:
+    build: { context: ., dockerfile: apps/web/Dockerfile }
+    ports: ['127.0.0.1:8080:8080']
+    depends_on:
+      api: { condition: service_healthy }
+
+volumes:
+  pgdata:
+  redisdata:
+  uploads:

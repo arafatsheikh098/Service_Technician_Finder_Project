@@ -1,0 +1,316 @@
+@import 'tailwindcss';
+@import 'leaflet/dist/leaflet.css';
+
+@theme {
+  --font-sans:
+    'Plus Jakarta Sans', 'Hind Siliguri', ui-sans-serif, system-ui, -apple-system, 'Segoe UI',
+    sans-serif;
+
+  --color-brand-50: #effcf8;
+  --color-brand-100: #d0f7ec;
+  --color-brand-200: #a3eed9;
+  --color-brand-300: #6adcc2;
+  --color-brand-400: #34c3a6;
+  --color-brand-500: #14a88d;
+  --color-brand-600: #0b8a75;
+  --color-brand-700: #0c6e60;
+  --color-brand-800: #0e584e;
+  --color-brand-900: #0f4841;
+
+  --color-ink-950: #060b16;
+  --color-ink-900: #0b1324;
+  --color-ink-800: #121d33;
+  --color-ink-700: #1c2944;
+
+  --shadow-soft: 0 1px 2px rgb(15 23 42 / 0.04), 0 4px 16px -4px rgb(15 23 42 / 0.08);
+  --shadow-lift: 0 2px 4px rgb(15 23 42 / 0.04), 0 16px 40px -12px rgb(15 23 42 / 0.18);
+  --shadow-glow: 0 10px 30px -10px rgb(20 168 141 / 0.55);
+
+  --animate-fade-up: fade-up 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-shimmer: shimmer 1.6s linear infinite;
+
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-8px);
+    }
+  }
+  @keyframes shimmer {
+    from {
+      background-position: -400px 0;
+    }
+    to {
+      background-position: 400px 0;
+    }
+  }
+}
+
+@layer base {
+  body {
+    @apply bg-slate-50 font-sans text-slate-800 antialiased;
+    font-feature-settings: 'ss01', 'cv11';
+  }
+  h1,
+  h2,
+  h3 {
+    @apply tracking-tight text-slate-900;
+  }
+  ::selection {
+    @apply bg-brand-200 text-brand-900;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 px-4 py-2.5 text-sm font-semibold text-white shadow-[var(--shadow-glow)] transition hover:brightness-110 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none;
+  }
+  .btn-accent {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-amber-400 px-4 py-2.5 text-sm font-bold text-ink-900 shadow-[0_10px_30px_-10px_rgb(251_191_36/0.7)] transition hover:bg-amber-300 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-[var(--shadow-soft)] transition hover:border-slate-300 hover:bg-slate-50 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-900;
+  }
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-rose-200 bg-white px-4 py-2.5 text-sm font-semibold text-rose-700 transition hover:bg-rose-50 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .input {
+    @apply w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm shadow-[var(--shadow-soft)] outline-none transition placeholder:text-slate-400 hover:border-slate-300 focus:border-brand-500 focus:ring-4 focus:ring-brand-100 disabled:bg-slate-50;
+  }
+  .label {
+    @apply mb-1.5 block text-sm font-semibold text-slate-700;
+  }
+  .card {
+    @apply rounded-2xl border border-slate-200/80 bg-white shadow-[var(--shadow-soft)];
+  }
+  .card-hover {
+    @apply transition duration-300 hover:-translate-y-1 hover:border-brand-200 hover:shadow-[var(--shadow-lift)];
+  }
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600;
+  }
+  .eyebrow {
+    @apply inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-semibold text-brand-200 backdrop-blur;
+  }
+  .section-title {
+    @apply text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl;
+  }
+  .text-gradient {
+    @apply bg-gradient-to-r from-brand-300 via-emerald-300 to-amber-200 bg-clip-text text-transparent;
+  }
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, rgb(255 255 255 / 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(255 255 255 / 0.05) 1px, transparent 1px);
+    background-size: 44px 44px;
+  }
+  .skeleton {
+    @apply rounded-lg;
+    background: linear-gradient(90deg, #eef2f6 0px, #f8fafc 120px, #eef2f6 240px);
+    background-size: 800px 100%;
+    animation: var(--animate-shimmer);
+  }
+  .leaflet-container {
+    @apply z-0 rounded-2xl font-sans;
+  }
+  .leaflet-tile-pane {
+    filter: saturate(0.55) contrast(0.92) brightness(1.04);
+  }
+  .leaflet-popup-content-wrapper {
+    @apply rounded-xl;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Used by Leaflet divIcon markers (inline HTML, outside Tailwind's reach). */
+@keyframes tf-pulse {
+  from {
+    transform: scale(0.6);
+    opacity: 0.9;
+  }
+  to {
+    transform: scale(1.7);
+    opacity: 0;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Motion & interaction layer                                          */
+/* ------------------------------------------------------------------ */
+
+@keyframes tf-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+@keyframes tf-aurora {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(8%, 6%) scale(1.12);
+  }
+  66% {
+    transform: translate(-6%, 4%) scale(0.92);
+  }
+}
+.tf-aurora {
+  animation: tf-aurora 18s ease-in-out infinite;
+}
+
+@keyframes tf-spin {
+  to {
+    --angle: 360deg;
+  }
+}
+@property --angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+@property --spot {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
+
+@layer components {
+  /* Cursor spotlight on cards: a soft glow painted *under* the content plus a glowing
+   border segment near the pointer. --mx/--my come from useSpotlight(). */
+  .card,
+  .spotlight {
+    position: relative;
+    background-image: radial-gradient(
+      520px circle at var(--mx, -999px) var(--my, -999px),
+      rgb(20 168 141 / calc(0.07 * var(--spot))),
+      transparent 45%
+    );
+    transition:
+      --spot 0.35s ease,
+      transform 0.3s ease,
+      box-shadow 0.3s ease,
+      border-color 0.3s ease;
+  }
+  .card:hover,
+  .spotlight:hover {
+    --spot: 1;
+  }
+  .card::after,
+  .spotlight::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: radial-gradient(
+      260px circle at var(--mx, -999px) var(--my, -999px),
+      rgb(20 168 141 / 0.7),
+      transparent 45%
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    pointer-events: none;
+  }
+  .card:hover::after,
+  .spotlight:hover::after {
+    opacity: 1;
+  }
+  /* Dark surfaces get a brighter glow. */
+  .spotlight-dark {
+    background-image: radial-gradient(
+      520px circle at var(--mx, -999px) var(--my, -999px),
+      rgb(52 195 166 / calc(0.16 * var(--spot))),
+      transparent 45%
+    );
+  }
+
+  /* Rotating conic gradient border for hero CTAs and highlighted cards. */
+  .glow-border {
+    position: relative;
+    isolation: isolate;
+  }
+  .glow-border::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    z-index: -1;
+    border-radius: inherit;
+    background: conic-gradient(from var(--angle), #34c3a6, #fbbf24, #818cf8, #34c3a6);
+    animation: tf-spin 4s linear infinite;
+    filter: blur(0.5px);
+  }
+}
+
+/* Typing dots used in the chat demo */
+@keyframes tf-bounce {
+  0%,
+  80%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  40% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+.typing-dot {
+  animation: tf-bounce 1.2s infinite ease-in-out;
+}
+
+/* Radar sweep for the search demo */
+@keyframes tf-radar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.radar-sweep {
+  animation: tf-radar 3.2s linear infinite;
+  background: conic-gradient(from 0deg, rgb(52 195 166 / 0.45), transparent 25%);
+}
+
+/* Lenis smooth scrolling */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}

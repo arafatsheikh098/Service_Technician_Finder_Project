@@ -1,0 +1,98 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  api:
+    name: API · lint, typecheck, test
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgis/postgis:17-3.5
+        env:
+          POSTGRES_USER: techfinder
+          POSTGRES_PASSWORD: techfinder
+          POSTGRES_DB: techfinder_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U techfinder" --health-interval 5s --health-timeout 3s --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - name: Dependency audit (production deps, high+)
+        run: npm audit --omit=dev --audit-level=high
+      - run: npm run lint -w apps/api
+      - run: npm run typecheck -w apps/api
+      - run: npm test -w apps/api
+        env:
+          TEST_DATABASE_URL: postgres://techfinder:techfinder@localhost:5432/techfinder_test
+      - run: npm run build -w apps/api
+
+  web:
+    name: Web · lint, typecheck, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npm run lint -w apps/web
+      - run: npm run typecheck -w apps/web
+      - run: npm run build -w apps/web
+
+  docker:
+    name: Docker images · build & vulnerability scan
+    runs-on: ubuntu-latest
+    needs: [api, web]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          {
+            context: .,
+            file: apps/api/Dockerfile,
+            push: false,
+            load: true,
+            tags: 'techfinder-api:ci',
+            cache-from: type=gha,
+            cache-to: 'type=gha,mode=max',
+          }
+      - uses: docker/build-push-action@v6
+        with:
+          {
+            context: .,
+            file: apps/web/Dockerfile,
+            push: false,
+            load: true,
+            tags: 'techfinder-web:ci',
+            cache-from: type=gha,
+            cache-to: 'type=gha,mode=max',
+          }
+      - name: Scan API image (Trivy)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          {
+            image-ref: 'techfinder-api:ci',
+            severity: 'CRITICAL,HIGH',
+            ignore-unfixed: true,
+            exit-code: '1',
+          }
+      - name: Scan web image (Trivy)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          {
+            image-ref: 'techfinder-web:ci',
+            severity: 'CRITICAL,HIGH',
+            ignore-unfixed: true,
+            exit-code: '1',
+          }

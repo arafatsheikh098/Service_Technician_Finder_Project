@@ -1,0 +1,10 @@
+# Included in every location that serves the SPA. (nginx drops server-level
+# add_header directives in any location that has its own add_header, so these
+# must be repeated per location, hence an include.)
+add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: ${MAP_TILE_ORIGINS}; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'" always;
+add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+add_header X-Content-Type-Options "nosniff" always;
+add_header X-Frame-Options "DENY" always;
+add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+add_header Permissions-Policy "geolocation=(self), camera=(), microphone=(), payment=()" always;
+add_header Cross-Origin-Opener-Policy "same-origin" always;
