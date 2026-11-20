@@ -2,6 +2,7 @@
   "name": "techfinder",
   "private": true,
   "description": "Geo-aware on-demand home-services marketplace: find, book and track verified technicians in real time.",
+  "license": "MIT",
   "workspaces": [
     "apps/api",
     "apps/web"
@@ -24,6 +25,7 @@
     "infra:up": "docker compose up -d db redis mailpit",
     "infra:down": "docker compose down"
   },
-  "devDependencies": {},
-  "license": "MIT"
+  "devDependencies": {
+    "prettier": "^3.10.1"
+  }
 }

@@ -34,7 +34,7 @@ const EnvSchema = z.object({
   APP_URL: z.url().default('http://localhost:5173'),
   TRUST_PROXY: z.coerce.number().int().min(0).default(0),
 
-  // "queue" sends notifications through BullMQ/Redis; "log" just logs them (tests, local hacking).
+  // "queue" sends notifications through BullMQ/Redis; "log" only writes them to the log (tests and local development).
   NOTIFICATIONS_DRIVER: z.enum(['queue', 'log']).default('queue'),
   SMTP_HOST: z.string().default('localhost'),
   SMTP_PORT: z.coerce.number().int().default(1025),

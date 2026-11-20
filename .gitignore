@@ -12,3 +12,4 @@ uploads/
 !.vscode/extensions.json
 **/.uploads/
 backups/
+*.tsbuildinfo

@@ -10,7 +10,6 @@ the technician live on a map, chat, pay and leave a review.
 
 [![CI](https://github.com/arafatsheikh098/Service_Technician_Finder_Project/actions/workflows/ci.yml/badge.svg)](https://github.com/arafatsheikh098/Service_Technician_Finder_Project/actions/workflows/ci.yml)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6)
-![Tests](https://img.shields.io/badge/tests-67%20passing-brightgreen)
 ![Node](https://img.shields.io/badge/Node.js-22-339933)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17%20%2B%20PostGIS-336791)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
@@ -367,4 +366,4 @@ docker-compose.prod.yml   Hardened production stack
 
 ---
 
-<sub>v1 (2024) was a JavaScript + MySQL university project. v2 is a ground-up rewrite that fixes its security problems (hard-coded credentials, unauthenticated admin routes, missing ownership checks) and adds everything above.</sub>
+<sub>v1 (2024) was a JavaScript + MySQL university project. v2 is a ground-up rewrite in TypeScript with a new architecture, security model and user interface.</sub>
