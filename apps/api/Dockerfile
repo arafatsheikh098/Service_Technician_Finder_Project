@@ -26,7 +26,11 @@ COPY --from=build /app/apps/api/dist ./apps/api/dist
 COPY apps/api/migrations ./apps/api/migrations
 COPY apps/api/package.json ./apps/api/
 WORKDIR /app/apps/api
-RUN mkdir -p /app/uploads && chown node:node /app/uploads
+# The server runs with plain `node`; drop npm, npx and corepack from the runtime image
+# so their bundled dependencies are not part of the attack surface.
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack \
+      /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack \
+  && mkdir -p /app/uploads && chown node:node /app/uploads
 USER node
 EXPOSE 8000
 HEALTHCHECK --interval=15s --timeout=3s --start-period=20s CMD wget -qO- http://localhost:8000/health/live || exit 1

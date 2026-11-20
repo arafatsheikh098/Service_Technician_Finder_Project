@@ -14,7 +14,11 @@ ENV VITE_MAP_TILE_URL=$VITE_MAP_TILE_URL VITE_MAP_ATTRIBUTION=$VITE_MAP_ATTRIBUT
 RUN npm run build -w apps/web
 
 # Unprivileged nginx: runs as a non-root user and listens on 8080.
-FROM nginxinc/nginx-unprivileged:1.27-alpine
+FROM nginxinc/nginx-unprivileged:1.31-alpine
+# Pull in Alpine security fixes released after the base image was built.
+USER root
+RUN apk upgrade --no-cache
+USER 101
 ENV MAP_TILE_ORIGINS="https://*.tile.openstreetmap.org"
 COPY apps/web/nginx/ /etc/nginx/templates/
 COPY --from=build /app/apps/web/dist /usr/share/nginx/html
