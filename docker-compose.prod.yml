@@ -1,0 +1,137 @@
+# PRODUCTION stack.
+#
+#   cp .env.production.example .env.production   # fill in every value
+#   docker compose -f docker-compose.prod.yml --env-file .env.production up -d --build
+#
+# Caddy terminates HTTPS (automatic Let's Encrypt certificates for $DOMAIN) and
+# forwards to nginx, which serves the SPA and proxies the API. Postgres and Redis
+# are only reachable on the internal Docker network. Every secret is required: the
+# stack refuses to start if one is missing. See docs/DEPLOYMENT.md.
+name: techfinder-prod
+
+x-logging: &logging
+  driver: json-file
+  options: { max-size: '10m', max-file: '5' }
+
+x-api-env: &api-env
+  NODE_ENV: production
+  LOG_LEVEL: ${LOG_LEVEL:-info}
+  DATABASE_URL: postgres://techfinder:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@db:5432/techfinder
+  REDIS_URL: redis://:${REDIS_PASSWORD:?set REDIS_PASSWORD}@redis:6379
+  JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?set JWT_ACCESS_SECRET}
+  PAYMENT_WEBHOOK_SECRET: ${PAYMENT_WEBHOOK_SECRET:?set PAYMENT_WEBHOOK_SECRET}
+  APP_URL: https://${DOMAIN:?set DOMAIN}
+  CORS_ORIGINS: https://${DOMAIN}
+  # client -> Caddy -> nginx -> api: two trusted proxy hops, so req.ip is the real client.
+  TRUST_PROXY: 2
+  SMTP_HOST: ${SMTP_HOST:?set SMTP_HOST}
+  SMTP_PORT: ${SMTP_PORT:-587}
+  SMTP_USER: ${SMTP_USER:-}
+  SMTP_PASS: ${SMTP_PASS:-}
+  MAIL_FROM: ${MAIL_FROM:?set MAIL_FROM}
+  ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+  MOCKPAY_ENABLED: ${MOCKPAY_ENABLED:-false}
+  API_DOCS_ENABLED: ${API_DOCS_ENABLED:-false}
+  UPLOAD_DIR: /app/uploads
+
+services:
+  db:
+    # Official image is amd64-only. On ARM servers (Graviton, Ampere) set
+    # POSTGIS_IMAGE=imresamu/postgis:17-3.5 (multi-arch build of the same image).
+    image: ${POSTGIS_IMAGE:-postgis/postgis:17-3.5}
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: techfinder
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_DB: techfinder
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U techfinder -d techfinder']
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    shm_size: 256mb
+    logging: *logging
+
+  redis:
+    image: redis:7.4-alpine
+    restart: unless-stopped
+    command:
+      [
+        'redis-server',
+        '--appendonly',
+        'yes',
+        '--requirepass',
+        '${REDIS_PASSWORD:?set REDIS_PASSWORD}',
+      ]
+    volumes: [redisdata:/data]
+    healthcheck:
+      test: ['CMD-SHELL', 'redis-cli -a "$$REDIS_PASSWORD" --no-auth-warning ping | grep PONG']
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    logging: *logging
+
+  api:
+    build: { context: ., dockerfile: apps/api/Dockerfile }
+    restart: unless-stopped
+    environment: *api-env
+    volumes: [uploads:/app/uploads]
+    depends_on:
+      db: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://localhost:8000/health/ready']
+      interval: 15s
+      timeout: 3s
+      retries: 5
+    deploy:
+      resources:
+        limits: { cpus: '1.0', memory: 512M }
+    logging: *logging
+
+  worker:
+    build: { context: ., dockerfile: apps/api/Dockerfile }
+    restart: unless-stopped
+    command: ['node', 'dist/worker.js']
+    environment: *api-env
+    healthcheck:
+      disable: true
+    depends_on:
+      api: { condition: service_healthy }
+    deploy:
+      resources:
+        limits: { cpus: '0.5', memory: 256M }
+    logging: *logging
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        VITE_MAP_TILE_URL: ${VITE_MAP_TILE_URL:-}
+        VITE_MAP_ATTRIBUTION: ${VITE_MAP_ATTRIBUTION:-}
+    restart: unless-stopped
+    environment:
+      MAP_TILE_ORIGINS: ${MAP_TILE_ORIGINS:-https://*.tile.openstreetmap.org}
+    depends_on:
+      api: { condition: service_healthy }
+    logging: *logging
+
+  caddy:
+    image: caddy:2.8-alpine
+    restart: unless-stopped
+    command: ['caddy', 'reverse-proxy', '--from', '${DOMAIN:?set DOMAIN}', '--to', 'web:8080']
+    ports: ['80:80', '443:443', '443:443/udp']
+    volumes: [caddy_data:/data, caddy_config:/config]
+    depends_on: [web]
+    logging: *logging
+
+volumes:
+  pgdata:
+  redisdata:
+  uploads:
+  caddy_data:
+  caddy_config:

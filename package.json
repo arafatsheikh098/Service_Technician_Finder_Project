@@ -1,0 +1,28 @@
+{
+  "name": "techfinder",
+  "private": true,
+  "description": "Geo-aware on-demand home-services marketplace: find, book and track verified technicians in real time.",
+  "workspaces": [
+    "apps/api",
+    "apps/web"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "npm run dev --workspaces --if-present",
+    "dev:api": "npm run dev -w apps/api",
+    "dev:web": "npm run dev -w apps/web",
+    "build": "npm run build --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "db:migrate": "npm run db:migrate -w apps/api",
+    "db:seed": "npm run db:seed -w apps/api",
+    "infra:up": "docker compose up -d db redis mailpit",
+    "infra:down": "docker compose down"
+  },
+  "devDependencies": {}
+}
